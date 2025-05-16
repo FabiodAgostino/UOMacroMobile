@@ -3,7 +3,7 @@
     <application android:allowBackup="true" android:supportsRtl="true" android:roundIcon="@mipmap/icon_round" >
 		
         <!-- Dichiarazione esplicita del servizio con il tipo foreground -->
-        <service
+		<service
             android:name="uomacromobile.platforms.android.MqttBackgroundService"
             android:exported="true"
             android:foregroundServiceType="dataSync" />

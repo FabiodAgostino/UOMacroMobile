@@ -4,8 +4,17 @@
     {
         public App()
         {
-            InitializeComponent();
-            MainPage = new AppShell();
+            try
+            {
+                InitializeComponent();
+                MainPage = new AppShell();
+            }
+            catch (Exception ex)
+            {
+                // Logga l'eccezione su un file o mostrala in un alert
+                System.Diagnostics.Debug.WriteLine($"Errore all'avvio: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+            }
         }
 
         protected override Window CreateWindow(IActivationState activationState)
