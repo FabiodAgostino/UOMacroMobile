@@ -1,0 +1,61 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                    x:Class="UOMacroMobile.Resources.Styles.Styles">
+
+    <!-- Stile per le Frame delle card -->
+    <Style x:Key="CardStyle" TargetType="Frame">
+        <Setter Property="BackgroundColor" Value="{StaticResource CardBackgroundDark}" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="Padding" Value="16" />
+        <Setter Property="Margin" Value="0,8" />
+        <Setter Property="BorderColor" Value="{StaticResource BorderColorDark}" />
+        <Setter Property="HasShadow" Value="False" />
+    </Style>
+
+    <!-- Stile per i titoli delle sezioni -->
+    <Style x:Key="SectionTitleStyle" TargetType="Label">
+        <Setter Property="TextColor" Value="{StaticResource TextColorLight}" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="Margin" Value="0,0,0,8" />
+    </Style>
+
+    <!-- Stile per l'intestazione principale -->
+    <Style x:Key="HeaderTitleStyle" TargetType="Label">
+        <Setter Property="TextColor" Value="{StaticResource TextColorLight}" />
+        <Setter Property="FontSize" Value="22" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="HorizontalOptions" Value="Start" />
+        <Setter Property="VerticalOptions" Value="Center" />
+    </Style>
+
+    <!-- Stile per i testi normali -->
+    <Style x:Key="NormalTextStyle" TargetType="Label">
+        <Setter Property="TextColor" Value="{StaticResource TextColorLight}" />
+        <Setter Property="FontSize" Value="14" />
+    </Style>
+
+    <!-- Stile per i testi secondari -->
+    <Style x:Key="SecondaryTextStyle" TargetType="Label">
+        <Setter Property="TextColor" Value="{StaticResource TextColorGray}" />
+        <Setter Property="FontSize" Value="12" />
+    </Style>
+
+    <!-- Stile per SearchBar -->
+    <Style x:Key="SearchBarStyle" TargetType="SearchBar">
+        <Setter Property="BackgroundColor" Value="{StaticResource CardBackgroundDark}" />
+        <Setter Property="TextColor" Value="{StaticResource TextColorLight}" />
+        <Setter Property="PlaceholderColor" Value="{StaticResource TextColorGray}" />
+        <Setter Property="CancelButtonColor" Value="{StaticResource TextColorLight}" />
+    </Style>
+
+    <!-- Stile per bottoni della tab bar -->
+    <Style x:Key="TabButtonStyle" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="Transparent" />
+        <Setter Property="TextColor" Value="{StaticResource TextColorLight}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="CornerRadius" Value="0" />
+    </Style>
+</ResourceDictionary>

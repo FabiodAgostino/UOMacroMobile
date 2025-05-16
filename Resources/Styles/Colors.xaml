@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                    x:Class="UOMacroMobile.Resources.Styles.Colors">
+
+    <!-- Colori principali dell'app -->
+    <Color x:Key="AppBackgroundDark">#121212</Color>
+    <Color x:Key="CardBackgroundDark">#1E1E1E</Color>
+    <Color x:Key="PrimaryPurple">#9866DF</Color>
+    <Color x:Key="SecondaryPurple">#7746B8</Color>
+    <Color x:Key="TextColorLight">#FFFFFF</Color>
+    <Color x:Key="TextColorGray">#9E9E9E</Color>
+    <Color x:Key="StatusGreen">#4CAF50</Color>
+    <Color x:Key="WarningYellow">#FFC107</Color>
+    <Color x:Key="ErrorRed">#F44336</Color>
+    <Color x:Key="InfoBlue">#2196F3</Color>
+    <Color x:Key="BorderColorDark">#333333</Color>
+    <Color x:Key="HeaderBlue">#0D47A1</Color>
+
+    <!-- Stili specifici per i componenti -->
+    <SolidColorBrush x:Key="AppBackgroundBrush" Color="{StaticResource AppBackgroundDark}"/>
+    <SolidColorBrush x:Key="CardBackgroundBrush" Color="{StaticResource CardBackgroundDark}"/>
+    <SolidColorBrush x:Key="PrimaryTextBrush" Color="{StaticResource TextColorLight}"/>
+    <SolidColorBrush x:Key="SecondaryTextBrush" Color="{StaticResource TextColorGray}"/>
+    <SolidColorBrush x:Key="PrimaryButtonBrush" Color="{StaticResource PrimaryPurple}"/>
+    <SolidColorBrush x:Key="StatusGreenBrush" Color="{StaticResource StatusGreen}"/>
+</ResourceDictionary>

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:converters="clr-namespace:UOMacroMobile.Converters"
+             x:Class="UOMacroMobile.Controls.NotificationCardView"
+             x:Name="this">
+
+    <ContentView.Resources>
+        <converters:SeverityToTitleColorConverter x:Key="SeverityToTitleColorConverter" />
+        <converters:SeverityToStatusColorConverter x:Key="SeverityToStatusColorConverter" />
+    </ContentView.Resources>
+
+    <Frame Style="{StaticResource CardStyle}"
+           Padding="12"
+           Margin="0,4">
+        <Grid ColumnDefinitions="Auto,*,Auto">
+
+            <!-- Colonna del pallino con layout interno per garantire una forma rotonda perfetta -->
+            <Grid Grid.Column="0" 
+                  WidthRequest="24" 
+                  HeightRequest="40" 
+                  VerticalOptions="Center"
+                  HorizontalOptions="Center"
+                  Margin="0,0,8,0">
+
+                <!-- Garantisce un pallino perfettamente rotondo -->
+                <Ellipse WidthRequest="16" 
+                         HeightRequest="16" 
+                         HorizontalOptions="Center"
+                         VerticalOptions="Center"
+                         Fill="{Binding Notification.Type, Source={x:Reference this}, Converter={StaticResource SeverityToStatusColorConverter}}" />
+            </Grid>
+
+            <!-- Colonna contenuto con layout verticale -->
+            <StackLayout Grid.Column="1" Spacing="4">
+                <!-- Titolo notifica con colore in base alla severità -->
+                <Label Text="{Binding Notification.Title, Source={x:Reference this}}"
+                       FontAttributes="Bold"
+                       TextColor="{Binding Notification.Type, Source={x:Reference this}, Converter={StaticResource SeverityToTitleColorConverter}}" />
+
+                <!-- Contenuto notifica -->
+                <Label Text="{Binding Notification.Message, Source={x:Reference this}}"
+                       TextColor="{StaticResource TextColorLight}" />
+
+                <!-- Timestamp -->
+                <Label Text="{Binding Notification.TimeAgo, Source={x:Reference this}}"
+                       TextColor="{StaticResource TextColorGray}"
+                       FontSize="12"
+                       Margin="0,4,0,0" />
+            </StackLayout>
+
+            <!-- Bottone chiusura -->
+            <Button Grid.Column="2"
+                    Text="✕"
+                    BackgroundColor="Transparent"
+                    TextColor="{StaticResource TextColorGray}"
+                    FontSize="16"
+                    WidthRequest="30"
+                    HeightRequest="30"
+                    Padding="0"
+                    HorizontalOptions="End"
+                    VerticalOptions="Start"
+                    Clicked="OnCloseClicked" />
+        </Grid>
+    </Frame>
+</ContentView>

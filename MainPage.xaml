@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             x:Class="UOMacroMobile.MainPage"
+             BackgroundColor="{StaticResource AppBackgroundDark}">
+    <Grid RowDefinitions="*, Auto">
+        <!-- Contenuto principale -->
+        <ContentView x:Name="MainContent" Grid.Row="0" />
+
+        <!-- Barra di navigazione -->
+        <Grid Grid.Row="1"
+              ColumnDefinitions="*,*,*"
+              BackgroundColor="{StaticResource CardBackgroundDark}"
+              HeightRequest="60"
+              Padding="0,4">
+            <!-- Notifiche -->
+            <VerticalStackLayout Grid.Column="0"
+                                 HorizontalOptions="Center"
+                                 VerticalOptions="Center">
+                <Image Source="notify.png"
+                       WidthRequest="24"
+                       HeightRequest="24" />
+                <Button BackgroundColor="Transparent" 
+                        BorderWidth="0"
+                        Clicked="OnNotificheTapped"
+                        WidthRequest="24"
+                        HeightRequest="24" />
+                <Label Text="Notifiche"
+                       FontSize="11"
+                       TextColor="{StaticResource TextColorGray}" />
+            </VerticalStackLayout>
+
+            <!-- Azioni -->
+            <VerticalStackLayout Grid.Column="2"
+                                 HorizontalOptions="Center"
+                                 VerticalOptions="Center">
+                <Image Source="actions_icon.png"
+                       WidthRequest="24"
+                       HeightRequest="24" />
+                <Button BackgroundColor="Transparent" 
+                        BorderWidth="0"
+                        Clicked="OnAzioniTapped"
+                        WidthRequest="24"
+                        HeightRequest="24" />
+                <Label Text="Azioni"
+                       FontSize="11"
+                       TextColor="{StaticResource TextColorGray}" />
+            </VerticalStackLayout>
+        </Grid>
+    </Grid>
+</ContentPage>

@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+            xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+            xmlns:viewmodels="clr-namespace:UOMacroMobile.ViewModels"
+            x:Class="UOMacroMobile.Pages.ActionsPage"
+            xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+            BackgroundColor="{StaticResource AppBackgroundDark}"
+            Shell.NavBarIsVisible="False"
+            x:DataType="viewmodels:ActionsViewModel"
+            Title="Azioni">
+
+    <Grid RowDefinitions="Auto,Auto,*,Auto">
+        <!-- Intestazione -->
+        <Grid Grid.Row="0" 
+              BackgroundColor="{StaticResource HeaderBlue}"
+              Padding="16,8" 
+              ColumnDefinitions="*,Auto,Auto">
+            <Frame Grid.Column="0"
+                   IsClippedToBounds="True"
+                   Padding="0"
+                   CornerRadius="20"
+                   BorderColor="Transparent"
+                   BackgroundColor="Transparent"
+                   WidthRequest="40"
+                   HeightRequest="40"
+                   Margin="0,0,30,0"
+                   HorizontalOptions="Start">
+                <Image Source="icon.png"
+                       Aspect="AspectFill"
+                       WidthRequest="40"
+                       HeightRequest="40"/>
+            </Frame>
+        </Grid>
+
+        <!-- Titolo della sezione -->
+        <Label Grid.Row="1"
+               Text="Controllo Applicazione"
+               Style="{StaticResource SectionTitleStyle}"
+               Margin="16,16,16,8" />
+
+        <!-- Contenitore pulsanti -->
+        <Grid Grid.Row="2" 
+      RowDefinitions="Auto,Auto,Auto"
+      Margin="16,0">
+
+            <!-- Pulsante START -->
+            <Frame Grid.Row="0" 
+           Margin="0,16,0,8"
+           Padding="0"
+           HeightRequest="60"
+           CornerRadius="10"
+           BorderColor="Transparent"
+           BackgroundColor="#4CAF50">
+                <Button Text="START"
+                TextColor="White"
+                FontSize="18"
+                FontAttributes="Bold"
+                BackgroundColor="Transparent"
+                Clicked="OnStartClicked" />
+            </Frame>
+
+            <!-- Pulsante STOP -->
+            <Frame Grid.Row="1" 
+           Margin="0,8,0,16"
+           Padding="0"
+           HeightRequest="60"
+           CornerRadius="10"
+           BorderColor="Transparent"
+           BackgroundColor="#FF5252">
+                <Button Text="STOP" 
+                TextColor="White"
+                FontSize="18"
+                FontAttributes="Bold"
+                BackgroundColor="Transparent"
+                Clicked="OnStopClicked" />
+            </Frame>
+
+            <!-- Descrizione dell'azione -->
+            <StackLayout Grid.Row="2" 
+                         Margin="0,24,0,0">
+                <Frame Style="{StaticResource CardStyle}"
+                       Padding="16"
+                       Margin="0,8">
+                    <StackLayout>
+                        <Label Text="Importante" 
+                               FontAttributes="Bold"
+                               TextColor="{StaticResource TextColorLight}"
+                               Margin="0,0,0,8" />
+
+                        <Label Text="Premendo START Ultima Online Macro riprenderà l'esecuzione. Premendo STOP Ultima Online Macro verrà fermato. Queste azioni hanno effetto immediato sull'applicativo."
+                               TextColor="{StaticResource TextColorLight}" />
+                    </StackLayout>
+                </Frame>
+            </StackLayout>
+        </Grid>
+
+        <!-- Indicatore di stato corrente -->
+        <Frame Grid.Row="3"
+               Style="{StaticResource CardStyle}"
+               Margin="16,8,16,16">
+            <StackLayout>
+                <Label Text="Stato Corrente"
+                       FontAttributes="Bold"
+                       TextColor="{StaticResource TextColorLight}"
+                       Margin="0,0,0,8" />
+
+                <Grid ColumnDefinitions="Auto,*">
+                    <Ellipse WidthRequest="16"
+                            HeightRequest="16"
+                            Fill="{Binding IsConnected, Converter={StaticResource ConnectionStatusColorConverter}}"
+                            VerticalOptions="Center"
+                            Margin="0,0,12,0" />
+
+                    <Label Grid.Column="1"
+                           Text="{Binding StatusText}"
+                           TextColor="{StaticResource TextColorLight}"
+                           VerticalOptions="Center" />
+                </Grid>
+            </StackLayout>
+        </Frame>
+    </Grid>
+</ContentPage>

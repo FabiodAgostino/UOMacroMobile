@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:UOMacroMobile.Controls"
+             xmlns:viewmodels="clr-namespace:UOMacroMobile.ViewModels"
+             x:Class="UOMacroMobile.Pages.NotificationsPage"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             x:DataType="viewmodels:NotificationsViewModel"
+             xmlns:converters="clr-namespace:UOMacroMobile.Converters"
+             xmlns:models="clr-namespace:MQTT.Models;assembly=MQTT"
+             BackgroundColor="{StaticResource AppBackgroundDark}"
+             Shell.NavBarIsVisible="False"
+             Title="Notifiche">
+
+    <ContentPage.Resources>
+        <converters:NullFilterSelectedConverter x:Key="NullFilterSelectedConverter" />
+        <converters:InfoFilterSelectedConverter x:Key="InfoFilterSelectedConverter" />
+        <converters:WarningFilterSelectedConverter x:Key="WarningFilterSelectedConverter" />
+        <converters:ErrorFilterSelectedConverter x:Key="ErrorFilterSelectedConverter" />
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,Auto,*,Auto">
+
+        <!-- Intestazione -->
+        <Grid Grid.Row="0" 
+              BackgroundColor="{StaticResource HeaderBlue}"
+              Padding="16,8" 
+              ColumnDefinitions="*,Auto,Auto">
+
+            <Frame Grid.Column="0"
+                   IsClippedToBounds="True"
+                   Padding="0"
+                   CornerRadius="20"
+                   BorderColor="Transparent"
+                   BackgroundColor="Transparent"
+                   WidthRequest="40"
+                   HeightRequest="40"
+                   Margin="0,0,30,0"
+                   HorizontalOptions="Start">
+                <Image Source="icon.png"
+                       Aspect="AspectFill"
+                       WidthRequest="40"
+                       HeightRequest="40"/>
+            </Frame>
+
+            <ImageButton Grid.Column="1"
+                         Source="qrcode_solid.svg"
+                         WidthRequest="24"
+                         HeightRequest="24"
+                         BackgroundColor="Transparent"
+                         Margin="0,0,12,0"
+                         Clicked="OnGlobeButtonClicked">
+                <ImageButton.Behaviors>
+                    <toolkit:IconTintColorBehavior TintColor="White" />
+                </ImageButton.Behaviors>
+            </ImageButton>
+
+            <ImageButton Grid.Column="2"
+                         Source="disconnect.png"
+                         WidthRequest="24"
+                         HeightRequest="24"
+                         BackgroundColor="Transparent"
+                         Margin="0,0,12,0"
+                         Clicked="DisconnectClicked">
+                <ImageButton.Behaviors>
+                    <toolkit:IconTintColorBehavior TintColor="White" />
+                </ImageButton.Behaviors>
+            </ImageButton>
+        </Grid>
+
+        <!-- Sezione Status -->
+        <Frame Grid.Row="1" 
+               Style="{StaticResource CardStyle}"
+               Margin="16,16,16,8">
+            <Grid RowDefinitions="Auto,Auto,Auto,Auto">
+                <Label Text="Connessione"
+                       Style="{StaticResource SectionTitleStyle}"
+                       Margin="0,0,0,12" />
+
+                <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto">
+                    <Label Text="Status" 
+                           Style="{StaticResource NormalTextStyle}"
+                           VerticalOptions="Center" />
+
+                    <controls:StatusIndicator Grid.Column="1"
+                                             StatusText="{Binding StatusText}"
+                                             StatusColor="{Binding StatusColor}" 
+                                             Margin="10,0,0,0"/>
+                </Grid>
+            </Grid>
+        </Frame>
+
+        <!-- Lista Notifiche -->
+        <Grid Grid.Row="2" RowDefinitions="Auto,Auto,*" Margin="16,8,16,16">
+            <Grid ColumnDefinitions="*,Auto">
+                <Label Text="Notifiche"
+                       Style="{StaticResource SectionTitleStyle}" />
+
+                <Button Grid.Column="1"
+                        x:Name="FilterButton"
+                        Text="🔍 Filtra"
+                        BackgroundColor="Transparent"
+                        TextColor="{StaticResource TextColorLight}"
+                        FontSize="14"
+                        Clicked="OnFilterButtonClicked" />
+            </Grid>
+
+            <!-- Sezione Filtri (nascosta di default) -->
+            <Grid Grid.Row="1" 
+                  x:Name="FilterBar" 
+                  RowDefinitions="Auto,Auto" 
+                  IsVisible="false">
+
+                <!-- SearchBar per filtrare per testo -->
+                <SearchBar Grid.Row="0"
+                           Placeholder="Filtra notifiche..."
+                           Style="{StaticResource SearchBarStyle}"
+                           Margin="0,8"
+                           Text="{Binding SearchText}" />
+
+                <!-- Filtri per gravità -->
+                <Grid Grid.Row="1" 
+                      ColumnDefinitions="Auto,Auto,Auto,Auto,Auto" 
+                      Margin="0,0,0,8">
+
+                    <Label Text="Filtro:"
+                           TextColor="{StaticResource TextColorLight}"
+                           VerticalOptions="Center" />
+
+                    <!-- Filtro Reset (tutti) -->
+                    <Frame Grid.Column="1"
+                           WidthRequest="32"
+                           HeightRequest="32"
+                           CornerRadius="16"
+                           Padding="0"
+                           Margin="8,0"
+                           BackgroundColor="#606060"
+                           BorderColor="{Binding SelectedSeverityFilter, Converter={StaticResource NullFilterSelectedConverter}}">
+                        <Label Text="×"
+                               TextColor="White"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center"
+                               FontSize="18" />
+                        <Frame.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnResetFilterTapped" />
+                        </Frame.GestureRecognizers>
+                    </Frame>
+
+                    <!-- Filtro Info (verde) -->
+                    <Frame Grid.Column="2"
+                           WidthRequest="32"
+                           HeightRequest="32"
+                           CornerRadius="16"
+                           Padding="0"
+                           Margin="8,0"
+                           BackgroundColor="#4CAF50"
+                           BorderColor="{Binding SelectedSeverityFilter, Converter={StaticResource InfoFilterSelectedConverter}}">
+                        <Frame.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnInfoFilterTapped" />
+                        </Frame.GestureRecognizers>
+                    </Frame>
+
+                    <!-- Filtro Warning (giallo) -->
+                    <Frame Grid.Column="3"
+                           WidthRequest="32"
+                           HeightRequest="32"
+                           CornerRadius="16"
+                           Padding="0"
+                           Margin="8,0"
+                           BackgroundColor="#FFC107"
+                           BorderColor="{Binding SelectedSeverityFilter, Converter={StaticResource WarningFilterSelectedConverter}}">
+                        <Frame.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnWarningFilterTapped" />
+                        </Frame.GestureRecognizers>
+                    </Frame>
+
+                    <!-- Filtro Error (rosso) -->
+                    <Frame Grid.Column="4"
+                           WidthRequest="32"
+                           HeightRequest="32"
+                           CornerRadius="16"
+                           Padding="0"
+                           Margin="8,0"
+                           BackgroundColor="#FF5252"
+                           BorderColor="{Binding SelectedSeverityFilter, Converter={StaticResource ErrorFilterSelectedConverter}}">
+                        <Frame.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnErrorFilterTapped" />
+                        </Frame.GestureRecognizers>
+                    </Frame>
+                </Grid>
+            </Grid>
+
+            <!-- CollectionView delle notifiche -->
+            <CollectionView Grid.Row="2"
+                            x:Name="NotificationsCollection"
+                            ItemsSource="{Binding Notifications}"
+                            Margin="0,8,0,0">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:MqttNotificationModel">
+                        <controls:NotificationCardView Notification="{Binding}"
+                                                      OnNotificationClosed="OnNotificationClosed" />
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center">
+                        <Label Text="Nessuna notifica presente"
+                               TextColor="{StaticResource TextColorGray}"
+                               HorizontalOptions="Center" />
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+            </CollectionView>
+        </Grid>
+    </Grid>
+</ContentPage>

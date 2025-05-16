@@ -1,0 +1,30 @@
+<Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+       xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+       xmlns:pages="clr-namespace:UOMacroMobile.Pages"
+       x:Class="UOMacroMobile.AppShell"
+       FlyoutBehavior="Disabled">
+
+    <!-- Colori per la Shell -->
+    <Shell.BackgroundColor>
+        <StaticResource Key="HeaderBlue" />
+    </Shell.BackgroundColor>
+    <Shell.ForegroundColor>White</Shell.ForegroundColor>
+    <Shell.TitleColor>White</Shell.TitleColor>
+    <Shell.DisabledColor>LightGray</Shell.DisabledColor>
+    <Shell.UnselectedColor>LightGray</Shell.UnselectedColor>
+    <Shell.TabBarBackgroundColor>
+        <StaticResource Key="HeaderBlue" />
+    </Shell.TabBarBackgroundColor>
+    <Shell.TabBarForegroundColor>White</Shell.TabBarForegroundColor>
+    <Shell.TabBarUnselectedColor>LightGray</Shell.TabBarUnselectedColor>
+    <Shell.TabBarTitleColor>White</Shell.TabBarTitleColor>
+
+    <TabBar>
+        <Tab Title="Notifiche" Icon="notify.png">
+            <ShellContent ContentTemplate="{DataTemplate pages:NotificationsPage}" />
+        </Tab>
+        <Tab Title="Azioni" Icon="actions_icon.png">
+            <ShellContent ContentTemplate="{DataTemplate pages:ActionsPage}" />
+        </Tab>
+    </TabBar>
+</Shell>
