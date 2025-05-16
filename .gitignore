@@ -574,6 +574,7 @@ GoogleService-Info.plist
 *.project.v9.bin
 *.strings.v9.bin
 
+*.keystore
 # Cache NuGet
 *.nupkg
 **/[Pp]ackages/*
