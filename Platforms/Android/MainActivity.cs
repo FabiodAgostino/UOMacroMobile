@@ -1,9 +1,10 @@
 ﻿using Android.App;
+using Android.Content;
 using Android.Content.PM;
 using Android.OS;
 using AndroidX.Core.App;
 using AndroidX.Core.Content;
-using Android.Content;
+using AndroidX.Startup;
 using UOMacroMobile.Platforms.Android;
 
 namespace UOMacroMobile
@@ -11,29 +12,35 @@ namespace UOMacroMobile
     [Activity(Theme = "@style/Maui.SplashTheme", MainLauncher = true, LaunchMode = LaunchMode.SingleTop, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation | ConfigChanges.UiMode | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize | ConfigChanges.Density)]
     public class MainActivity : MauiAppCompatActivity
     {
+        private bool _initialized = false;  
         protected override void OnCreate(Bundle savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
-
-            // Richiedi i permessi di notifica per Android 13+ (API 33+)
-            if (Build.VERSION.SdkInt >= BuildVersionCodes.Tiramisu)
+            if (!_initialized)
             {
-                // Verifica se abbiamo già il permesso
-                if (ContextCompat.CheckSelfPermission(this, Android.Manifest.Permission.PostNotifications)
-                    != Permission.Granted)
+                _initialized = true;
+
+                // Richiedi i permessi di notifica per Android 13+ (API 33+)
+                if (Build.VERSION.SdkInt >= BuildVersionCodes.Tiramisu)
                 {
-                    // Richiedi il permesso
-                    ActivityCompat.RequestPermissions(this,
-                        new string[] { Android.Manifest.Permission.PostNotifications },
-                        100); // ID richiesta arbitrario
+                    // Verifica se abbiamo già il permesso
+                    if (ContextCompat.CheckSelfPermission(this, Android.Manifest.Permission.PostNotifications)
+                        != Permission.Granted)
+                    {
+                        // Richiedi il permesso
+                        ActivityCompat.RequestPermissions(this,
+                            new string[] { Android.Manifest.Permission.PostNotifications },
+                            100); // ID richiesta arbitrario
+                    }
                 }
+
+                // Inizializza il canale di notifica
+                CreateNotificationChannel();
+
+                // Avvia il servizio MQTT in background (prima volta)
+                StartMqttBackgroundService(true);
             }
-
-            // Inizializza il canale di notifica
-            CreateNotificationChannel();
-
-            // Avvia il servizio MQTT in background (prima volta)
-            StartMqttBackgroundService(true);
+           
         }
 
         // NUOVO: Gestione dello stato quando l'app va in foreground

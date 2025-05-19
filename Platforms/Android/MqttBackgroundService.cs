@@ -25,8 +25,13 @@ namespace UOMacroMobile.Platforms.Android
 
         public override StartCommandResult OnStartCommand(Intent intent, StartCommandFlags flags, int startId)
         {
+            if (_mqttService != null)
+            {
+                Console.WriteLine("MqttBackgroundService: servizio già avviato, ignorando la richiesta");
+                return StartCommandResult.Sticky;
+            }
+
             _mqttService = MauiApplication.Current.Services.GetService<IMqqtService>();
-            _notificationService = new NotificationService();
 
             // Imposta lo stato del servizio
             IsServiceRunning = true;

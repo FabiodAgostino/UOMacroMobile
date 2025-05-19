@@ -74,8 +74,15 @@ namespace UOMacroMobile.Services.Implementations
                         {
                             MainThread.BeginInvokeOnMainThread(() =>
                             {
-                                Notifications.Insert(0, notification);
-                                NotificationReceived?.Invoke(this, notification);
+                                if (!Notifications.Any(n => n.Id == notification.Id))
+                                {
+                                    Notifications.Insert(0, notification);
+                                    NotificationReceived?.Invoke(this, notification);
+                                }
+                                else
+                                {
+                                    Console.WriteLine($"Notifica duplicata ignorata: ID {notification.Id}");
+                                }
                             });
                         }
                     }
