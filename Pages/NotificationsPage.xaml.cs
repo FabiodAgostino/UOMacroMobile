@@ -14,12 +14,12 @@ public partial class NotificationsPage : ContentPage
 
     public NotificationsPage()
     {
-        InitializeComponent();
         _mqttService = IPlatformApplication.Current.Services.GetService<IMqqtService>();
         var notificationService = IPlatformApplication.Current.Services.GetService<INotificationService>();
+        _qrScannerService = IPlatformApplication.Current.Services.GetService<IQrScannerService>();
+        InitializeComponent();
         _viewModel = new NotificationsViewModel(_mqttService, notificationService);
         BindingContext = _viewModel;
-        _qrScannerService = IPlatformApplication.Current.Services.GetService<IQrScannerService>();
         Dispatcher.Dispatch(async () =>
         {
             Console.WriteLine("Dispatcher.Dispatch eseguito");
@@ -28,7 +28,7 @@ public partial class NotificationsPage : ContentPage
                 try
                 {
                     if(!String.IsNullOrEmpty(_mqttService.CurrentDeviceId))
-                    await _mqttService.ConnectAsync(_mqttService.CurrentDeviceId);
+                        await _mqttService.SubscribeNotifications();
                     _viewModel.UpdateConnectionStatus();
                     BindingContext = _viewModel;
                 }
@@ -41,13 +41,14 @@ public partial class NotificationsPage : ContentPage
     }
 
 
-    public NotificationsPage(IMqqtService mqttService, INotificationService notificationService)
+    public NotificationsPage(IMqqtService mqttService, INotificationService notificationService, IQrScannerService qrScannerService)
     {
         InitializeComponent();
 
         _mqttService = mqttService;
         _viewModel = new NotificationsViewModel(mqttService, notificationService);
         BindingContext = _viewModel;
+        _qrScannerService = qrScannerService;
     }
 
 
@@ -63,7 +64,7 @@ public partial class NotificationsPage : ContentPage
 
     private async void OnGlobeButtonClicked(object sender, EventArgs e)
     {
-        if (_mqttService.IsConnected)
+        if (_mqttService.SmartphoneConnected)
         {
             bool disconnect = await DisplayAlert(
                 "Disconnessione",
@@ -83,7 +84,7 @@ public partial class NotificationsPage : ContentPage
 
     private async void DisconnectClicked(object sender, EventArgs e)
     {
-        if (_mqttService.IsConnected)
+        if (_mqttService.SmartphoneConnected)
         {
             bool disconnect = await DisplayAlert(
                 "Disconnessione",

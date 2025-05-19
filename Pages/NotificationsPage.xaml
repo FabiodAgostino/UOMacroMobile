@@ -73,12 +73,12 @@
                Style="{StaticResource CardStyle}"
                Margin="16,16,16,8">
             <Grid RowDefinitions="Auto,Auto,Auto,Auto">
-                <Label Text="Connessione"
+                <Label Text="Status"
                        Style="{StaticResource SectionTitleStyle}"
                        Margin="0,0,0,12" />
 
                 <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto">
-                    <Label Text="Status" 
+                    <Label Text="Client" 
                            Style="{StaticResource NormalTextStyle}"
                            VerticalOptions="Center" />
 
@@ -87,8 +87,20 @@
                                              StatusColor="{Binding StatusColor}" 
                                              Margin="10,0,0,0"/>
                 </Grid>
+
+                <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto">
+                    <Label Text="Connessione" 
+    Style="{StaticResource NormalTextStyle}"
+    VerticalOptions="Center" />
+
+                    <controls:StatusIndicator Grid.Column="1"
+                      StatusText="{Binding StatusTextDevice}"
+                      StatusColor="{Binding StatusColorDevice}" 
+                      Margin="10,0,0,0"/>
+                </Grid>
             </Grid>
         </Frame>
+       
 
         <!-- Lista Notifiche -->
         <Grid Grid.Row="2" RowDefinitions="Auto,Auto,*" Margin="16,8,16,16">

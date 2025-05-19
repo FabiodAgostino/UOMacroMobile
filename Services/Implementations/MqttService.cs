@@ -20,7 +20,8 @@ namespace UOMacroMobile.Services.Implementations
 
         public event EventHandler<MqttNotificationModel> NotificationReceived;
         public event EventHandler<bool> ConnectionStatusChanged;
-
+        public bool Subscribed { get; set; } = false;
+        public bool SmartphoneConnected { get; set; }
         public bool IsConnected => _mqttClient?.IsConnected ?? false;
         public string CurrentDeviceId
         {
@@ -56,12 +57,27 @@ namespace UOMacroMobile.Services.Implementations
 
                     if (notification != null)
                     {
-                        // Aggiungi alla collezione sul thread UI
-                        MainThread.BeginInvokeOnMainThread(() =>
+                        if(notification.Message == "CONNECT-OK")
                         {
-                            Notifications.Insert(0, notification);
+                            var startDate = Preferences.Get("WaitResponseConnect", new DateTime());
+                            if(startDate != new DateTime() && startDate.AddMinutes(2)>DateTime.Now)
+                            {
+                                SmartphoneConnected = true;
+                            }
+                            else
+                            {
+                                SmartphoneConnected = false;
+                            }
                             NotificationReceived?.Invoke(this, notification);
-                        });
+                        }
+                        else
+                        {
+                            MainThread.BeginInvokeOnMainThread(() =>
+                            {
+                                Notifications.Insert(0, notification);
+                                NotificationReceived?.Invoke(this, notification);
+                            });
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -85,11 +101,21 @@ namespace UOMacroMobile.Services.Implementations
             Preferences.Remove(DeviceIdKey);
         }
 
-        public async Task<bool> ConnectAsync(string deviceId)
+        public async Task SubscribeNotifications()
         {
-            bool needsReconnect = deviceId != _currentDeviceId || !IsConnected;
+            if(IsConnected && !Subscribed)
+            {
+                await _mqttClient.SubscribeAsync(new MqttTopicFilterBuilder()
+                          .WithTopic($"uom/notifications/{CurrentDeviceId}")
+                          .WithQualityOfServiceLevel(MQTTnet.Protocol.MqttQualityOfServiceLevel.AtLeastOnce)
+                          .Build());
+                Subscribed = true;
+            }
+        }
 
-            if (needsReconnect)
+        public async Task<bool> ConnectAsync()
+        {
+            if (!IsConnected)
             {
                 await _connectionSemaphore.WaitAsync();
                 try
@@ -98,8 +124,6 @@ namespace UOMacroMobile.Services.Implementations
                     {
                         await _mqttClient.DisconnectAsync();
                     }
-
-                    CurrentDeviceId = deviceId;
 
                     var options = new MqttClientOptionsBuilder()
                         .WithTcpServer("broker.hivemq.com", 1883)
@@ -111,12 +135,6 @@ namespace UOMacroMobile.Services.Implementations
 
                     if (result.ResultCode == MqttClientConnectResultCode.Success)
                     {
-                        // Sottoscrizione al topic
-                        await _mqttClient.SubscribeAsync(new MqttTopicFilterBuilder()
-                            .WithTopic($"uom/notifications/{deviceId}")
-                            .WithQualityOfServiceLevel(MQTTnet.Protocol.MqttQualityOfServiceLevel.AtLeastOnce)
-                            .Build());
-
                         ConnectionStatusChanged?.Invoke(this, true);
                         return true;
                     }
@@ -178,6 +196,12 @@ namespace UOMacroMobile.Services.Implementations
                 Console.WriteLine($"Errore nell'invio della notifica: {ex.Message}");
                 return false;
             }
+        }
+
+        public async Task SmartphoneIsAvailable()
+        {
+            Preferences.Set("WaitResponseConnect", DateTime.Now);
+            await PublishNotificationAsync("CONNECT", "CONNECT", MQTT.Models.MqttNotificationModel.NotificationSeverity.Info);
         }
     }
 }

@@ -10,81 +10,91 @@ namespace UOMacroMobile.Services.Implementations
         public async Task ShowNotificationAsync(MqttNotificationModel notification)
         {
             var notificationId = new Random().Next(100000);
-
+            if(notification.Type!= NotificationSeverity.Info)
+            {
 #if ANDROID
-            await ShowAndroidNotificationAsync(notification, notificationId);
+                await ShowAndroidNotificationAsync(notification, notificationId);
 #elif IOS
             await ShowiOSNotificationAsync(notification, notificationId);
 #endif
+            }
         }
 
 #if ANDROID
-       private Task ShowAndroidNotificationAsync(MqttNotificationModel notification, int notificationId)
-{
-    Console.WriteLine($"ShowAndroidNotificationAsync: tipo={notification.Type}, priorità alta={IsHighPriorityNotification(notification.Type)}");
-    
-   try
-    {
-        var context = Android.App.Application.Context;
-        var notificationManager = context.GetSystemService(Android.Content.Context.NotificationService) as Android.App.NotificationManager;
-        
-        if (notificationManager == null)
+        private Task ShowAndroidNotificationAsync(MqttNotificationModel notification, int notificationId)
         {
-            Console.WriteLine("Errore: NotificationManager è null");
-            return Task.CompletedTask;
-        }
-        
-        // Scegli il canale in base alla priorità
-        string channelId = IsHighPriorityNotification(notification.Type) 
-            ? "mqtt_high_priority" 
-            : "mqtt_notifications";
-        
-        // Costruisci la notifica
-        var builder = new AndroidX.Core.App.NotificationCompat.Builder(context, channelId)
+            Console.WriteLine($"ShowAndroidNotificationAsync: tipo={notification.Type}, priorità alta={IsHighPriorityNotification(notification.Type)}");
+
+            try
+            {
+                var context = Android.App.Application.Context;
+                var notificationManager = context.GetSystemService(Android.Content.Context.NotificationService) as Android.App.NotificationManager;
+
+                if (notificationManager == null)
+                {
+                    Console.WriteLine("Errore: NotificationManager è null");
+                    return Task.CompletedTask;
+                }
+
+                // Scegli il canale in base alla priorità
+                string channelId = IsHighPriorityNotification(notification.Type)
+                    ? "mqtt_high_priority"
+                    : "mqtt_notifications";
+
+                var applicationContext = Android.App.Application.Context;
+
+
+                var largeIconBitmap = Android.Graphics.BitmapFactory.DecodeResource(
+                    applicationContext.Resources,
+                    Resource.Drawable.icon_round);
+
+                // Costruisci la notifica
+                var builder = new AndroidX.Core.App.NotificationCompat.Builder(context, channelId)
             .SetContentTitle(notification.Title)
             .SetContentText(notification.Message)
-            .SetSmallIcon(Resource.Drawable.notification_icon_background)
+            .SetSmallIcon(Resource.Drawable.icon_round)
+            .SetLargeIcon(largeIconBitmap)
             .SetAutoCancel(true);
-        
-        // Imposta priorità in base al tipo
-        if (IsHighPriorityNotification(notification.Type))
-        {
-            builder.SetPriority(AndroidX.Core.App.NotificationCompat.PriorityHigh);
-            builder.SetCategory(AndroidX.Core.App.NotificationCompat.CategoryAlarm);
-            builder.SetVibrate(new long[] { 0, 250, 250, 250 });
-            Console.WriteLine("Impostata notifica ad alta priorità");
+
+                // Imposta priorità in base al tipo
+                if (IsHighPriorityNotification(notification.Type))
+                {
+                    builder.SetPriority(AndroidX.Core.App.NotificationCompat.PriorityHigh);
+                    builder.SetCategory(AndroidX.Core.App.NotificationCompat.CategoryAlarm);
+                    builder.SetVibrate(new long[] { 0, 250, 250, 250 });
+                    Console.WriteLine("Impostata notifica ad alta priorità");
+                }
+
+                // Aggiunge dati personalizzati come intent extra
+                var intent = new Android.Content.Intent(context, typeof(MainActivity));
+                intent.PutExtra("notification_data", JsonSerializer.Serialize(notification));
+                intent.AddFlags(Android.Content.ActivityFlags.ClearTop);
+
+                var pendingIntentFlags = Android.App.PendingIntentFlags.UpdateCurrent;
+                if (Android.OS.Build.VERSION.SdkInt >= Android.OS.BuildVersionCodes.S)
+                {
+                    pendingIntentFlags |= Android.App.PendingIntentFlags.Immutable;
+                }
+
+                var pendingIntent = Android.App.PendingIntent.GetActivity(
+                    context,
+                    notificationId,
+                    intent,
+                    pendingIntentFlags);
+
+                builder.SetContentIntent(pendingIntent);
+
+                // Mostra la notifica
+                notificationManager.Notify(notificationId, builder.Build());
+                Console.WriteLine($"Notifica Android mostrata con ID {notificationId}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Errore durante la visualizzazione della notifica Android: {ex}");
+            }
+
+            return Task.CompletedTask;
         }
-        
-        // Aggiunge dati personalizzati come intent extra
-        var intent = new Android.Content.Intent(context, typeof(MainActivity));
-        intent.PutExtra("notification_data", JsonSerializer.Serialize(notification));
-        intent.AddFlags(Android.Content.ActivityFlags.ClearTop);
-        
-        var pendingIntentFlags = Android.App.PendingIntentFlags.UpdateCurrent;
-        if (Android.OS.Build.VERSION.SdkInt >= Android.OS.BuildVersionCodes.S)
-        {
-            pendingIntentFlags |= Android.App.PendingIntentFlags.Immutable;
-        }
-        
-        var pendingIntent = Android.App.PendingIntent.GetActivity(
-            context, 
-            notificationId, 
-            intent, 
-            pendingIntentFlags);
-            
-        builder.SetContentIntent(pendingIntent);
-            
-        // Mostra la notifica
-        notificationManager.Notify(notificationId, builder.Build());
-        Console.WriteLine($"Notifica Android mostrata con ID {notificationId}");
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Errore durante la visualizzazione della notifica Android: {ex}");
-    }
-    
-    return Task.CompletedTask;
-}
 #endif
 
 #if IOS

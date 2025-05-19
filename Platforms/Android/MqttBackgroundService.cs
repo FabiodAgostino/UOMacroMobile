@@ -5,6 +5,7 @@ using Android.OS;
 using AndroidX.Core.App;
 using UOMacroMobile.Services.Implementations;
 using UOMacroMobile.Services.Interfaces;
+using Android.Graphics;
 
 namespace UOMacroMobile.Platforms.Android
 {
@@ -53,12 +54,33 @@ namespace UOMacroMobile.Platforms.Android
 
             // Crea il canale di notifica (solo per Android ≥ O)
             CreateNotificationChannel();
-
             // Prepara la notifica
+            // Prepara la notifica
+            var pendingIntent = PendingIntent.GetActivity(
+     this,
+     0,
+     new Intent(this, typeof(MainActivity)),
+     PendingIntentFlags.Immutable);
+
+            // Carica l'icona dell'app come bitmap
+            Bitmap largeIconBitmap = null;
+            try
+            {
+                // Usa BitmapFactory senza il prefisso Android.Graphics
+                largeIconBitmap = BitmapFactory.DecodeResource(this.Resources, Resource.Mipmap.icon_round);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore caricamento icona: {ex.Message}");
+            }
+
+
             var notification = new NotificationCompat.Builder(this, ChannelId)
                 .SetContentTitle("ROTMobile")
                 .SetContentText("Servizio di monitoraggio attivo")
-                .SetSmallIcon(Resource.Drawable.notification_icon_background)
+                .SetSmallIcon(Resource.Drawable.icon_round)  // Icona nella barra di stato
+                .SetLargeIcon(largeIconBitmap)  // Icona circolare nella notifica
+                .SetContentIntent(pendingIntent)  // Apre l'app quando cliccata
                 .SetOngoing(true)
                 .Build();
 

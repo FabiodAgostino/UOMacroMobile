@@ -73,7 +73,7 @@ namespace UOMacroMobile.ViewModels
                     deviceId = "default"; // O qualsiasi ID predefinito che vuoi usare
                 }
 
-                await _mqqtService.ConnectAsync(deviceId);
+                await _mqqtService.ConnectAsync();
                 await _mqqtService.PublishNotificationAsync("START", "L'applicativo è stato avviato da un dispositivo mobile", MqttNotificationModel.NotificationSeverity.Info);
             }
 

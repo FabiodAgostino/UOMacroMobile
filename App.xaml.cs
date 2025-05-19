@@ -1,13 +1,18 @@
-﻿namespace UOMacroMobile
+﻿using System.Diagnostics;
+using UOMacroMobile.Services.Interfaces;
+
+namespace UOMacroMobile
 {
     public partial class App : Application
     {
+        private IMqqtService _mqttService;
         public App()
         {
             try
             {
                 InitializeComponent();
                 MainPage = new AppShell();
+                _mqttService = IPlatformApplication.Current.Services.GetService<IMqqtService>();
             }
             catch (Exception ex)
             {
@@ -15,6 +20,12 @@
                 System.Diagnostics.Debug.WriteLine($"Errore all'avvio: {ex.Message}");
                 System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
             }
+        }
+
+        protected override void OnResume()
+        {
+            _mqttService.SmartphoneIsAvailable();
+            base.OnResume();
         }
 
         protected override Window CreateWindow(IActivationState activationState)
@@ -26,7 +37,7 @@
                 // Avvia il servizio in background
                 StartBackgroundService();
             };
-
+            _mqttService.ConnectAsync();
             return window;
         }
 

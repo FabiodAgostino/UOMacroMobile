@@ -12,8 +12,12 @@ namespace UOMacroMobile.ViewModels
         private readonly IMqqtService _mqttService;
         private readonly INotificationService _notificationService;
 
-        private string _statusText = "Stopped";
+        private string _statusText = "Disconnesso";
+        private string _statusTextDevice = "Disconnesso";
+
         private Color _statusColor = Colors.Red;
+        private Color _statusColorDevice = Colors.Red;
+
         private string _runtimeText = "00:00:00";
         private string _lastActivityText = "Never";
         private DateTime _startTime;
@@ -22,7 +26,7 @@ namespace UOMacroMobile.ViewModels
         private NotificationSeverity? _selectedSeverityFilter;
         private ObservableCollection<MqttNotificationModel> _allNotifications;
         private ObservableCollection<MqttNotificationModel> _filteredNotifications;
-
+        public bool SmartphoneConnected => _mqttService.SmartphoneConnected;    
         public bool IsConnected => _mqttService.IsConnected;
         public string CurrentDeviceId => _mqttService.CurrentDeviceId;
 
@@ -67,6 +71,18 @@ namespace UOMacroMobile.ViewModels
             set => SetProperty(ref _statusColor, value);
         }
 
+        public string StatusTextDevice
+        {
+            get => _statusTextDevice;
+            set => SetProperty(ref _statusTextDevice, value);
+        }
+
+        public Color StatusColorDevice
+        {
+            get => _statusColorDevice;
+            set => SetProperty(ref _statusColorDevice, value);
+        }
+
         public string RuntimeText
         {
             get => _runtimeText;
@@ -103,6 +119,7 @@ namespace UOMacroMobile.ViewModels
 
             // Aggiorna lo stato
             UpdateConnectionStatus();
+            UpdateConnectionStatusDevice();
 
             // Avvia il timer per il runtime
             StartRuntimeTimer();
@@ -141,16 +158,18 @@ namespace UOMacroMobile.ViewModels
         {
             MainThread.BeginInvokeOnMainThread(async () =>
             {
-                if (!_allNotifications.Any(n => n.Id == notification.Id))
+                if (!_allNotifications.Any(n => n.Id == notification.Id) && notification.Message!="CONNECT-OK")
                 {
                     _allNotifications.Insert(0, notification);
                     ApplyFilters(); // Applica i filtri quando arriva una nuova notifica
                 }
 
                 LastActivityText = "adesso";
-
+                UpdateConnectionStatus();
+                UpdateConnectionStatusDevice();
                 // Mostra notifica push
-                await _notificationService.ShowNotificationAsync(notification);
+                if(notification.Message != "CONNECT-OK")
+                    await _notificationService.ShowNotificationAsync(notification);
             });
         }
 
@@ -159,6 +178,7 @@ namespace UOMacroMobile.ViewModels
             MainThread.BeginInvokeOnMainThread(() =>
             {
                 UpdateConnectionStatus();
+                UpdateConnectionStatusDevice();
             });
         }
 
@@ -166,15 +186,28 @@ namespace UOMacroMobile.ViewModels
         {
             if (_mqttService.IsConnected)
             {
-                StatusText = "Running";
+                StatusText = "Connesso";
                 StatusColor = Colors.Green;
                 _isRunning = true;
             }
             else
             {
-                StatusText = "Stopped";
+                StatusText = "Disconnesso";
                 StatusColor = Colors.Red;
                 _isRunning = false;
+            }
+        }
+        public void UpdateConnectionStatusDevice()
+        {
+            if (_mqttService.SmartphoneConnected)
+            {
+                StatusTextDevice = "Connesso";
+                StatusColorDevice = Colors.Green;
+            }
+            else
+            {
+                StatusTextDevice = "Disconnesso";
+                StatusColorDevice = Colors.Red;
             }
         }
 
@@ -230,7 +263,7 @@ namespace UOMacroMobile.ViewModels
         }
 
         public async Task DisconnectAsync() => await _mqttService.DisconnectAsync();
-        public async Task ConnectAsync(string deviceId) => await _mqttService.ConnectAsync(deviceId);
+        public async Task ConnectAsync(string deviceId) => await _mqttService.ConnectAsync();
 
         // Metodo di test per creare notifiche con diverse gravità
         public void SendNotification()

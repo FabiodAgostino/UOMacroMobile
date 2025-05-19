@@ -159,12 +159,7 @@ namespace UOMacroMobile.ViewModels
             });
         }
 
-        public async Task SmartphoneIsAvailable()
-        {
-            await _mqttService.PublishNotificationAsync("CONNECT", "CONNECT", MQTT.Models.MqttNotificationModel.NotificationSeverity.Info);
-        }
-
-        public void ProcessQrResult(string result)
+        public async void ProcessQrResult(string result)
         {
             if (string.IsNullOrEmpty(result))
                 return;
@@ -178,8 +173,8 @@ namespace UOMacroMobile.ViewModels
             {
                 try
                 {
-                    await _mqttService.ConnectAsync(result);
-                    await SmartphoneIsAvailable();
+                    await _mqttService.SubscribeNotifications();
+                    await _mqttService.SmartphoneIsAvailable();
                 }
                 catch (Exception ex)
                 {

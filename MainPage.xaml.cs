@@ -31,9 +31,7 @@ namespace UOMacroMobile
             // Lazy initialization
             if (_notificationsView == null)
             {
-                _notificationsView = new NotificationsPage();
-
-                // Inizializza in modo esplicito
+                _notificationsView = IPlatformApplication.Current.Services.GetService<NotificationsPage>();
             }
 
             // Assegna semplicemente la view
@@ -44,7 +42,7 @@ namespace UOMacroMobile
         {
             if (_actionsView == null)
             {
-                _actionsView = new ActionsPage();
+                _actionsView = IPlatformApplication.Current.Services.GetService<ActionsPage>();
             }
 
             MainContent.Content = _actionsView.Content;

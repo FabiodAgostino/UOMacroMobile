@@ -7,20 +7,12 @@ namespace UOMacroMobile.Pages
     {
         private readonly ActionsViewModel _viewModel;
 
-        public ActionsPage()
+        public ActionsPage(ActionsViewModel viewModel)
         {
             InitializeComponent();
-
-            // Otteniamo il servizio MQTT
-            var mqttService = IPlatformApplication.Current.Services.GetService<IMqqtService>();
-
-            // Creiamo il ViewModel
-            _viewModel = new ActionsViewModel(mqttService);
-
-            // Impostiamo il BindingContext
+            _viewModel = viewModel;
             BindingContext = _viewModel;
         }
-
         private async void OnStartClicked(object sender, EventArgs e)
         {
             try

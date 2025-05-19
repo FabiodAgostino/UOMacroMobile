@@ -44,10 +44,12 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<AndroidResource Include="Platforms\Android\Resources\Drawable\icon_round.png" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<!-- App Icon -->
-		<MauiIcon Include="Resources\AppIcon\icon_main2.png"
-		   ForegroundScale="1.0"
-		   Color="Transparent" />
+		<MauiIcon Include="Resources\AppIcon\icon_main2.png" ForegroundScale="1.0" Color="Transparent" />
 
 
 		<!-- Splash Screen -->
