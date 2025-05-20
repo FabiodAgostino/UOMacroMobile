@@ -21,24 +21,21 @@ namespace UOMacroMobile
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
                 });
 
-            // Registrazioni esistenti
+            // Registra tutti i ViewModels
             builder.Services.AddSingleton<NotificationsViewModel>();
             builder.Services.AddSingleton<QrScannerViewModel>();
-            builder.Services.AddSingleton<IQrScannerService, QrScannerService>();
-            builder.Services.AddTransient<QrScannerPage>();
-            builder.Services.AddSingleton<IMqqtService, MqttService>();
-            builder.Services.AddSingleton<INotificationService, NotificationService>();
-
-            // Aggiungi questa riga per ActionsViewModel
             builder.Services.AddSingleton<ActionsViewModel>();
 
-            // Registra anche le pagine come servizi
+            // Registra tutte le pagine
+            builder.Services.AddTransient<QrScannerPage>();
             builder.Services.AddTransient<NotificationsPage>();
             builder.Services.AddTransient<ActionsPage>();
 
-#if DEBUG
-            builder.Logging.AddDebug();
-#endif
+            // Altri servizi
+            builder.Services.AddSingleton<IMqqtService, MqttService>();
+            builder.Services.AddSingleton<IQrScannerService, QrScannerService>();
+            builder.Services.AddSingleton<INotificationService, NotificationService>();
+            builder.Services.AddSingleton<IDialogService, DialogService>();
 
             return builder.Build();
         }

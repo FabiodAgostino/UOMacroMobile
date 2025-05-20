@@ -20,10 +20,12 @@ namespace UOMacroMobile.ViewModels
         [ObservableProperty]
         private bool _cameraDenied;
         private IMqqtService _mqttService;
+        private readonly IDialogService dialogService;
 
-        public QrScannerViewModel(IMqqtService mqqtService)
+        public QrScannerViewModel(IMqqtService mqqtService, IDialogService dialogService)
         {
             _mqttService = mqqtService;
+            this.dialogService = dialogService;
             StatusMessage = "Posiziona il QR Code nel riquadro";
             IsBusy = false;
             CameraDenied = false;
@@ -167,7 +169,7 @@ namespace UOMacroMobile.ViewModels
             IsScanning = false;
             IsBusy = true;
             StatusMessage = "QR Code rilevato!";
-
+            await dialogService.DisplayAlertAsync("dentro ProcessQrResult", result, "chiudi");
             // Invia il risultato e chiudi la pagina
             MainThread.BeginInvokeOnMainThread(async () =>
             {

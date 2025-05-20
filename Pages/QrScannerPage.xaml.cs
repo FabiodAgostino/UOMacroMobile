@@ -14,7 +14,7 @@ namespace UOMacroMobile.Pages
         public QrScannerPage()
         {
             InitializeComponent();
-            _viewModel = new QrScannerViewModel(IPlatformApplication.Current.Services.GetService<IMqqtService>());
+            _viewModel = new QrScannerViewModel(IPlatformApplication.Current.Services.GetService<IMqqtService>(), IPlatformApplication.Current.Services.GetService<IDialogService>());
             BindingContext = _viewModel;
 
             // Inizializza il WebView per la scansione QR
@@ -198,6 +198,7 @@ namespace UOMacroMobile.Pages
                 webViewContainer.IsVisible = false;
 
                 // Processa il risultato del QR code
+                await DisplayAlert("debug",result, "chiudi");
                 _viewModel.ProcessQrResult(result);
 
                 await Navigation.PopModalAsync();

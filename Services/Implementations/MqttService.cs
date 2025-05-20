@@ -14,6 +14,7 @@ namespace UOMacroMobile.Services.Implementations
         private IMqttClient _mqttClient;
         private string _currentDeviceId;
         private readonly SemaphoreSlim _connectionSemaphore = new SemaphoreSlim(1, 1);
+        private readonly IDialogService dialogService;
         private const string DeviceIdKey = "CurrentMqttDeviceId";
 
         public ObservableCollection<MqttNotificationModel> Notifications { get; } = new();
@@ -42,7 +43,7 @@ namespace UOMacroMobile.Services.Implementations
             }
         }
 
-        public MqttService()
+        public MqttService(IDialogService dialogService)
         {
             _mqttClient = new MqttFactory().CreateMqttClient();
             _currentDeviceId = Preferences.Get(DeviceIdKey, string.Empty);
@@ -101,6 +102,7 @@ namespace UOMacroMobile.Services.Implementations
                 ConnectionStatusChanged?.Invoke(this, false);
                 return Task.CompletedTask;
             };
+            this.dialogService = dialogService;
         }
 
         public void DeleteCurrentConnection()
@@ -142,6 +144,7 @@ namespace UOMacroMobile.Services.Implementations
 
                     if (result.ResultCode == MqttClientConnectResultCode.Success)
                     {
+                        await dialogService.DisplayAlertAsync("connesso", CurrentDeviceId, "ok");
                         ConnectionStatusChanged?.Invoke(this, true);
                         return true;
                     }
@@ -172,6 +175,8 @@ namespace UOMacroMobile.Services.Implementations
 
         public async Task<bool> PublishNotificationAsync(string title, string message, NotificationSeverity type)
         {
+            await dialogService.DisplayAlertAsync("PublishNotificationAsync", title, "ok");
+
             if (!IsConnected) return false;
 
             try
@@ -196,6 +201,8 @@ namespace UOMacroMobile.Services.Implementations
                     .Build();
 
                 var result = await _mqttClient.PublishAsync(mqttMessage);
+                await dialogService.DisplayAlertAsync("inviato", result.IsSuccess.ToString(), "ok");
+
                 return result.IsSuccess;
             }
             catch (Exception ex)

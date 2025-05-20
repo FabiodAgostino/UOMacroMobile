@@ -25,6 +25,7 @@
 
 
 
+
 		<!-- Display name -->
 		<ApplicationTitle>UOMacroMobile</ApplicationTitle>
 
@@ -42,7 +43,18 @@
 		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
 	</PropertyGroup>
-
+	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
+		<AndroidLinkMode>SdkOnly</AndroidLinkMode>
+		<DebugSymbols>false</DebugSymbols>
+		<DebugType>portable</DebugType>
+		<AndroidCreatePackagePerAbi>true</AndroidCreatePackagePerAbi>
+		<EnableLLVM>false</EnableLLVM>
+		<AndroidEnableSGenConcurrent>true</AndroidEnableSGenConcurrent>
+		<AndroidPackageFormat>apk</AndroidPackageFormat>
+	</PropertyGroup>
+	<PropertyGroup>
+		<AndroidProguardFile>proguard.cfg</AndroidProguardFile>
+	</PropertyGroup>
 	<ItemGroup>
 		<AndroidResource Include="Platforms\Android\Resources\Drawable\icon_round.png" />
 	</ItemGroup>

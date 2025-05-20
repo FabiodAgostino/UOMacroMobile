@@ -10,6 +10,8 @@
                 <ResourceDictionary Source="Resources/Styles/Colors.xaml" />
                 <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
             </ResourceDictionary.MergedDictionaries>
+            <converters:ConnectionStatusColorConverter x:Key="ConnectionStatusColorConverter" />
+
         </ResourceDictionary>
     </Application.Resources>
 </Application>

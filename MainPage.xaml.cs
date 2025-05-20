@@ -26,26 +26,18 @@ namespace UOMacroMobile
             ShowAzioniView();
         }
 
-        private async void ShowNotificheView()
+        private void ShowNotificheView()
         {
-            // Lazy initialization
-            if (_notificationsView == null)
-            {
-                _notificationsView = IPlatformApplication.Current.Services.GetService<NotificationsPage>();
-            }
-
-            // Assegna semplicemente la view
-            MainContent.Content = _notificationsView.Content;
+            // Ottieni una nuova istanza dalla DI
+            var notificationsPage = IPlatformApplication.Current.Services.GetService<NotificationsPage>();
+            MainContent.Content = new ContentView { Content = notificationsPage.Content };
         }
 
         private void ShowAzioniView()
         {
-            if (_actionsView == null)
-            {
-                _actionsView = IPlatformApplication.Current.Services.GetService<ActionsPage>();
-            }
-
-            MainContent.Content = _actionsView.Content;
+            // Ottieni una nuova istanza dalla DI
+            var actionsPage = IPlatformApplication.Current.Services.GetService<ActionsPage>();
+            MainContent.Content = new ContentView { Content = actionsPage.Content };
         }
     }
 }
