@@ -165,11 +165,10 @@ namespace UOMacroMobile.ViewModels
         {
             if (string.IsNullOrEmpty(result))
                 return;
-
+            _mqttService.CurrentDeviceId = result;
             IsScanning = false;
             IsBusy = true;
             StatusMessage = "QR Code rilevato!";
-            await dialogService.DisplayAlertAsync("dentro ProcessQrResult", result, "chiudi");
             // Invia il risultato e chiudi la pagina
             MainThread.BeginInvokeOnMainThread(async () =>
             {

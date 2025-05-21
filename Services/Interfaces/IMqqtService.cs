@@ -14,7 +14,7 @@ namespace UOMacroMobile.Services.Interfaces
         public ObservableCollection<MqttNotificationModel> Notifications { get; }
         public bool IsConnected { get; }
         bool SmartphoneConnected { get; set; }
-        public string CurrentDeviceId { get; }
+        public string CurrentDeviceId { get; set; }
         void DeleteCurrentConnection();
         Task SmartphoneIsAvailable();
         Task SubscribeNotifications();

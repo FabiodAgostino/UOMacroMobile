@@ -10,7 +10,7 @@ namespace UOMacroMobile.ViewModels
         private readonly IMqqtService _mqqtService;
         private string _statusText;
 
-        public bool IsConnected => _mqqtService.IsConnected;
+        public bool IsConnected { get; set; } = true;
 
         public string StatusText
         {
@@ -53,29 +53,21 @@ namespace UOMacroMobile.ViewModels
 
         public async Task Stop()
         {
-            if (_mqqtService.IsConnected)
-            {
-                await _mqqtService.PublishNotificationAsync("STOP", "L'applicativo è stato fermato da un dispositivo mobile", MqttNotificationModel.NotificationSeverity.Info);
-                await _mqqtService.DisconnectAsync();
-            }
+            if (!_mqqtService.IsConnected)
+                await _mqqtService.ConnectAsync();
 
+            await _mqqtService.PublishNotificationAsync("STOP", "L'applicativo è stato fermato da un dispositivo mobile", MqttNotificationModel.NotificationSeverity.Info);
+            IsConnected = false;
             UpdateStatus();
         }
 
         public async Task Start()
         {
             if (!_mqqtService.IsConnected)
-            {
-                // Assicurati che sia disponibile un ID dispositivo
-                string deviceId = _mqqtService.CurrentDeviceId;
-                if (string.IsNullOrEmpty(deviceId))
-                {
-                    deviceId = "default"; // O qualsiasi ID predefinito che vuoi usare
-                }
-
                 await _mqqtService.ConnectAsync();
-                await _mqqtService.PublishNotificationAsync("START", "L'applicativo è stato avviato da un dispositivo mobile", MqttNotificationModel.NotificationSeverity.Info);
-            }
+
+            await _mqqtService.PublishNotificationAsync("START", "L'applicativo è stato avviato da un dispositivo mobile", MqttNotificationModel.NotificationSeverity.Info);
+            IsConnected = true;
 
             UpdateStatus();
         }

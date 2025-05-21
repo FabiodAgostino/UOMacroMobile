@@ -198,7 +198,6 @@ namespace UOMacroMobile.Pages
                 webViewContainer.IsVisible = false;
 
                 // Processa il risultato del QR code
-                await DisplayAlert("debug",result, "chiudi");
                 _viewModel.ProcessQrResult(result);
 
                 await Navigation.PopModalAsync();

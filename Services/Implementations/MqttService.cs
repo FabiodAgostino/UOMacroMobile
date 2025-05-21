@@ -35,7 +35,7 @@ namespace UOMacroMobile.Services.Implementations
                 }
                 return _currentDeviceId;
             }
-            private set
+            set
             {
                 // Quando viene impostato un nuovo device ID, salvalo in Preferences
                 _currentDeviceId = value;
@@ -144,7 +144,6 @@ namespace UOMacroMobile.Services.Implementations
 
                     if (result.ResultCode == MqttClientConnectResultCode.Success)
                     {
-                        await dialogService.DisplayAlertAsync("connesso", CurrentDeviceId, "ok");
                         ConnectionStatusChanged?.Invoke(this, true);
                         return true;
                     }
@@ -175,8 +174,6 @@ namespace UOMacroMobile.Services.Implementations
 
         public async Task<bool> PublishNotificationAsync(string title, string message, NotificationSeverity type)
         {
-            await dialogService.DisplayAlertAsync("PublishNotificationAsync", title, "ok");
-
             if (!IsConnected) return false;
 
             try
@@ -201,8 +198,6 @@ namespace UOMacroMobile.Services.Implementations
                     .Build();
 
                 var result = await _mqttClient.PublishAsync(mqttMessage);
-                await dialogService.DisplayAlertAsync("inviato", result.IsSuccess.ToString(), "ok");
-
                 return result.IsSuccess;
             }
             catch (Exception ex)
