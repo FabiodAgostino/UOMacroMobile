@@ -31,13 +31,21 @@ namespace UOMacroMobile
         protected override Window CreateWindow(IActivationState activationState)
         {
             var window = base.CreateWindow(activationState);
+            StartBackgroundService();
 
-            window.Created += (s, e) =>
+            window.Created += async (s, e) =>
             {
-                // Avvia il servizio in background
-                StartBackgroundService();
+                try
+                {
+                    await _mqttService.ConnectAsync(true);
+                    Console.WriteLine("Connessione MQTT completata con successo");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Errore durante la connessione MQTT: {ex.Message}");
+                }
             };
-            _mqttService.ConnectAsync();
+
             return window;
         }
 

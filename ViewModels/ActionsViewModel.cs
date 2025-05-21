@@ -41,11 +41,11 @@ namespace UOMacroMobile.ViewModels
         {
             if (IsConnected)
             {
-                StatusText = "Connesso - L'applicativo è in esecuzione";
+                StatusText = "L'applicativo è in esecuzione";
             }
             else
             {
-                StatusText = "Non connesso - L'applicativo è fermo";
+                StatusText = "L'applicativo è fermo";
             }
 
             OnPropertyChanged(nameof(IsConnected));

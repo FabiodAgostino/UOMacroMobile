@@ -22,8 +22,6 @@ namespace UOMacroMobile.Pages
                 bool confirm = await DisplayAlert("Conferma", "Sei sicuro di voler avviare l'applicativo?", "Sì", "No");
                 if(confirm)
                     await _viewModel.Start();
-
-                await DisplayAlert("Applicativo Avviato", "L'applicativo è stato avviato con successo.", "OK");
             }
             catch (Exception ex)
             {

@@ -110,9 +110,9 @@ namespace UOMacroMobile.Services.Implementations
             Preferences.Remove(DeviceIdKey);
         }
 
-        public async Task SubscribeNotifications()
+        public async Task SubscribeNotifications(bool force = false)
         {
-            if(IsConnected && !Subscribed)
+            if((IsConnected && !Subscribed) || force)
             {
                 await _mqttClient.SubscribeAsync(new MqttTopicFilterBuilder()
                           .WithTopic($"uom/notifications/{CurrentDeviceId}")
@@ -122,7 +122,7 @@ namespace UOMacroMobile.Services.Implementations
             }
         }
 
-        public async Task<bool> ConnectAsync()
+        public async Task<bool> ConnectAsync(bool autoReconnect= false)
         {
             if (!IsConnected)
             {
@@ -158,6 +158,12 @@ namespace UOMacroMobile.Services.Implementations
                 finally
                 {
                     _connectionSemaphore.Release();
+                    if (autoReconnect && !String.IsNullOrEmpty(CurrentDeviceId))
+                    {
+                        await SubscribeNotifications(autoReconnect);
+                        await SmartphoneIsAvailable();
+
+                    }
                 }
             }
             return false;
@@ -167,6 +173,10 @@ namespace UOMacroMobile.Services.Implementations
         {
             if (_mqttClient?.IsConnected == true)
             {
+                Preferences.Remove(DeviceIdKey);
+                Preferences.Remove("WaitResponseConnect");
+                CurrentDeviceId = String.Empty;
+                SmartphoneConnected = false;
                 await _mqttClient.DisconnectAsync();
                 ConnectionStatusChanged?.Invoke(this, false);
             }

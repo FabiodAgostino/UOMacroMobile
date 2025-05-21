@@ -64,7 +64,8 @@ public partial class NotificationsPage : ContentPage
 
     private async void OnGlobeButtonClicked(object sender, EventArgs e)
     {
-        if (_mqttService.SmartphoneConnected)
+
+        if (_mqttService.SmartphoneConnected || (!_mqttService.SmartphoneConnected && _mqttService.IsConnected))
         {
             bool disconnect = await DisplayAlert(
                 "Disconnessione",
@@ -84,20 +85,29 @@ public partial class NotificationsPage : ContentPage
 
     private async void DisconnectClicked(object sender, EventArgs e)
     {
-        if (_mqttService.SmartphoneConnected)
+        if(_mqttService.IsConnected)
         {
-            bool disconnect = await DisplayAlert(
-                "Disconnessione",
-                $"Sei connesso a {_mqttService.CurrentDeviceId}. Vuoi disconnetterti? Questo eliminerà anche la connessione di default!",
-                "Disconnetti", "Annulla");
-
+            bool disconnect = false;
+            if (_mqttService.SmartphoneConnected)
+            {
+                disconnect = await DisplayAlert(
+                    "Disconnessione",
+                    $"Sei connesso a {_mqttService.CurrentDeviceId}. Vuoi disconnetterti?",
+                    "Disconnetti", "Annulla");
+            }
+            else
+            {
+                disconnect = await DisplayAlert(
+                   "Disconnessione",
+                   $"Sei connesso a al client mqtt. Vuoi disconnetterti?",
+                   "Disconnetti", "Annulla");
+            }
             if (disconnect)
             {
                 await _mqttService.DisconnectAsync();
-                _mqttService.DeleteCurrentConnection();
-
             }
         }
+       
     }
 
     // Mostra/nasconde la barra dei filtri

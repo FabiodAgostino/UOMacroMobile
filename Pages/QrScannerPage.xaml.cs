@@ -185,15 +185,13 @@ namespace UOMacroMobile.Pages
         {
             if (e.Url.StartsWith("qrcode://"))
             {
+                if (sender is WebView scannerWebView)
+                    scannerWebView.IsVisible = false;
+
                 e.Cancel = true;
                 string result = Uri.UnescapeDataString(e.Url.Substring(9));
 
                 await _webView.EvaluateJavaScriptAsync("stopScanning()");
-
-                if (sender is WebView scannerWebView)
-                {
-                    scannerWebView.IsVisible = false;
-                }
 
                 webViewContainer.IsVisible = false;
 

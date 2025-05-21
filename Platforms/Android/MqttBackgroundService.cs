@@ -47,16 +47,6 @@ namespace UOMacroMobile.Platforms.Android
                 }
             }
 
-            // Gestione delle notifiche ricevute
-            _mqttService.NotificationReceived += async (s, notification) =>
-            {
-                // Mostra notifiche solo se l'app è in background
-                if (!AppStateManager.IsAppInForeground)
-                {
-                    await _notificationService.ShowNotificationAsync(notification);
-                }
-            };
-
             // Crea il canale di notifica (solo per Android ≥ O)
             CreateNotificationChannel();
             // Prepara la notifica

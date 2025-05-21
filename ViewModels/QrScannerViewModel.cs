@@ -174,8 +174,13 @@ namespace UOMacroMobile.ViewModels
             {
                 try
                 {
-                    await _mqttService.SubscribeNotifications();
-                    await _mqttService.SmartphoneIsAvailable();
+                    if (!_mqttService.IsConnected)
+                        await _mqttService.ConnectAsync(true);
+                    else
+                    {
+                        await _mqttService.SubscribeNotifications(true);
+                        await _mqttService.SmartphoneIsAvailable();
+                    }
                 }
                 catch (Exception ex)
                 {

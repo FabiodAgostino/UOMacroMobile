@@ -6,7 +6,7 @@ namespace UOMacroMobile.Services.Interfaces
 {
     public interface IMqqtService
     {
-        Task<bool> ConnectAsync();
+        Task<bool> ConnectAsync(bool autoReconnect=false);
         Task DisconnectAsync();
         Task<bool> PublishNotificationAsync(string title, string message, NotificationSeverity type );
         public event EventHandler<MqttNotificationModel> NotificationReceived;
@@ -17,6 +17,6 @@ namespace UOMacroMobile.Services.Interfaces
         public string CurrentDeviceId { get; set; }
         void DeleteCurrentConnection();
         Task SmartphoneIsAvailable();
-        Task SubscribeNotifications();
+        Task SubscribeNotifications(bool force = false);
     }
 }

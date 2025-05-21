@@ -12,11 +12,9 @@ namespace UOMacroMobile.Services.Implementations
             var notificationId = new Random().Next(100000);
             if(notification.Type!= NotificationSeverity.Info)
             {
-#if ANDROID
+            #if ANDROID
                 await ShowAndroidNotificationAsync(notification, notificationId);
-#elif IOS
-            await ShowiOSNotificationAsync(notification, notificationId);
-#endif
+            #endif
             }
         }
 
