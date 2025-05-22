@@ -8,10 +8,39 @@
              BackgroundColor="Black"
              NavigationPage.HasNavigationBar="False">
 
-    <Grid RowDefinitions="Auto,*" VerticalOptions="FillAndExpand">
+    <Grid>
+        <!-- WebView per la scansione - visibile solo quando i permessi sono OK e sta scansionando -->
+        <WebView x:Name="scannerWebView" 
+                 HorizontalOptions="Fill" 
+                 VerticalOptions="Fill"
+                 BackgroundColor="Black"
+                 IsVisible="{Binding IsScanning}" />
+
+        <!-- Contenitore per WebView aggiuntivo -->
+        <ContentView x:Name="webViewContainer" 
+                   IsVisible="{Binding IsScanning}">
+        </ContentView>
+
+        <!-- Bordo di scansione - visibile solo durante la scansione -->
+        <Border WidthRequest="250"
+                HeightRequest="250"
+                HorizontalOptions="Center"
+                VerticalOptions="Center"
+                Stroke="White"
+                StrokeThickness="2"
+                StrokeShape="RoundRectangle 10"
+                BackgroundColor="Transparent"
+                IsVisible="{Binding IsScanning}">
+            <Border.Shadow>
+                <Shadow Brush="White"
+                        Offset="0,0"
+                        Radius="5"
+                        Opacity="0.5" />
+            </Border.Shadow>
+        </Border>
+
         <!-- Barra superiore -->
-        <Grid Grid.Row="0" 
-              BackgroundColor="#80000000"
+        <Grid BackgroundColor="#80000000"
               HeightRequest="60"
               VerticalOptions="Start">
             <HorizontalStackLayout Spacing="15" Padding="15">
@@ -32,64 +61,73 @@
             </HorizontalStackLayout>
         </Grid>
 
-        <!-- Area principale con scanner -->
-        <Grid Grid.Row="1" VerticalOptions="FillAndExpand">
-            <!-- Container WebView a schermo intero -->
-            <ContentView x:Name="webViewContainer" 
-                       VerticalOptions="FillAndExpand"
-                       HorizontalOptions="FillAndExpand"
-                       BackgroundColor="Black"
-                       IsVisible="{Binding IsScanning}"/>
-
-            <!-- Bordo di scansione -->
-            <Border WidthRequest="250"
-                    HeightRequest="250"
-                    HorizontalOptions="Center"
+        <!-- Indicatore di attesa - visibile durante il caricamento -->
+        <StackLayout IsVisible="{Binding IsBusy}"
                     VerticalOptions="Center"
-                    Stroke="White"
-                    StrokeThickness="2"
-                    StrokeShape="RoundRectangle 10"
-                    BackgroundColor="Transparent"
-                    IsVisible="{Binding IsScanning}">
-                <Border.Shadow>
-                    <Shadow Brush="White"
-                            Offset="0,0"
-                            Radius="5"
-                            Opacity="0.5" />
-                </Border.Shadow>
-            </Border>
-
-            <!-- Indicatore di attesa -->
+                    HorizontalOptions="Center"
+                    Spacing="20">
             <ActivityIndicator IsRunning="{Binding IsBusy}"
-                               IsVisible="{Binding IsBusy}"
-                               Color="White"
-                               HorizontalOptions="Center"
-                               VerticalOptions="Center"
-                               Scale="1.5" />
+                              Color="White"
+                              Scale="1.5" />
+            <Label Text="{Binding StatusMessage}"
+                   TextColor="White"
+                   HorizontalTextAlignment="Center"
+                   FontSize="16" />
+        </StackLayout>
 
-            <!-- Messaggio di permessi negati -->
-            <StackLayout IsVisible="{Binding CameraDenied}"
-                        VerticalOptions="Center"
+        <!-- Messaggio di permessi negati -->
+        <StackLayout IsVisible="{Binding CameraDenied}"
+                    VerticalOptions="Center"
+                    HorizontalOptions="Center"
+                    Spacing="20"
+                    Padding="20">
+            <Image Source="camera_denied.png" 
+                  WidthRequest="100" 
+                  HeightRequest="100"
+                  HorizontalOptions="Center" />
+            <Label Text="Permesso fotocamera negato"
+                  TextColor="White"
+                  FontSize="18"
+                  HorizontalOptions="Center" />
+            <Label Text="Per scansionare un QR code è necessario abilitare l'accesso alla fotocamera nelle impostazioni dell'app."
+                  TextColor="White"
+                  FontSize="14"
+                  HorizontalTextAlignment="Center" />
+
+            <!-- Pulsanti per permessi negati -->
+            <StackLayout Orientation="Horizontal" 
                         HorizontalOptions="Center"
-                        Spacing="20"
-                        Padding="20">
-                <Image Source="camera_denied.png" 
-                      WidthRequest="100" 
-                      HeightRequest="100"
-                      HorizontalOptions="Center" />
-                <Label Text="Permesso fotocamera negato"
-                      TextColor="White"
-                      FontSize="18"
-                      HorizontalOptions="Center" />
-                <Label Text="Per scansionare un QR code è necessario abilitare l'accesso alla fotocamera nelle impostazioni."
-                      TextColor="White"
-                      FontSize="14"
-                      HorizontalTextAlignment="Center" />
+                        Spacing="15">
+                <Button Text="Riprova"
+                       Command="{Binding RetryPermissionsCommand}"
+                       BackgroundColor="#4CAF50"
+                       TextColor="White"
+                       WidthRequest="100" />
                 <Button Text="Chiudi"
                        Command="{Binding CloseCommand}"
-                       HorizontalOptions="Center"
-                       Margin="0,20,0,0" />
+                       BackgroundColor="#FF5252"
+                       TextColor="White"
+                       WidthRequest="100" />
             </StackLayout>
-        </Grid>
+        </StackLayout>
+
+        <!-- Schermata di inizializzazione -->
+        <StackLayout IsVisible="{Binding PermissionsChecked, Converter={toolkit:InvertedBoolConverter}}"
+                    VerticalOptions="Center"
+                    HorizontalOptions="Center"
+                    Spacing="20"
+                    Padding="20">
+            <ActivityIndicator IsRunning="True"
+                              Color="White"
+                              Scale="1.5" />
+            <Label Text="Inizializzazione scanner..."
+                   TextColor="White"
+                   FontSize="16"
+                   HorizontalTextAlignment="Center" />
+            <Label Text="Verifica permessi fotocamera in corso"
+                   TextColor="#CCCCCC"
+                   FontSize="14"
+                   HorizontalTextAlignment="Center" />
+        </StackLayout>
     </Grid>
 </ContentPage>

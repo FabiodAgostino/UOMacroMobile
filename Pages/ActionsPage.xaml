@@ -40,55 +40,85 @@
 
         <!-- Contenitore pulsanti -->
         <Grid Grid.Row="2" 
-      RowDefinitions="Auto,Auto,Auto"
-      Margin="16,0">
+              RowDefinitions="Auto,Auto,Auto,Auto"
+              Margin="16,0">
 
             <!-- Pulsante START -->
             <Frame Grid.Row="0" 
-           Margin="0,16,0,8"
-           Padding="0"
-           HeightRequest="60"
-           CornerRadius="10"
-           BorderColor="Transparent"
-           BackgroundColor="#4CAF50">
+                   Margin="0,16,0,8"
+                   Padding="0"
+                   HeightRequest="60"
+                   CornerRadius="10"
+                   BorderColor="Transparent"
+                   BackgroundColor="#4CAF50">
                 <Button Text="START"
-                TextColor="White"
-                FontSize="18"
-                FontAttributes="Bold"
-                BackgroundColor="Transparent"
-                Clicked="OnStartClicked" />
+                        TextColor="White"
+                        FontSize="18"
+                        FontAttributes="Bold"
+                        BackgroundColor="Transparent"
+                        Clicked="OnStartClicked" />
             </Frame>
 
             <!-- Pulsante STOP -->
             <Frame Grid.Row="1" 
-           Margin="0,8,0,16"
-           Padding="0"
-           HeightRequest="60"
-           CornerRadius="10"
-           BorderColor="Transparent"
-           BackgroundColor="#FF5252">
+                   Margin="0,8,0,8"
+                   Padding="0"
+                   HeightRequest="60"
+                   CornerRadius="10"
+                   BorderColor="Transparent"
+                   BackgroundColor="#FF5252">
                 <Button Text="STOP" 
-                TextColor="White"
-                FontSize="18"
-                FontAttributes="Bold"
-                BackgroundColor="Transparent"
-                Clicked="OnStopClicked" />
+                        TextColor="White"
+                        FontSize="18"
+                        FontAttributes="Bold"
+                        BackgroundColor="Transparent"
+                        Clicked="OnStopClicked" />
             </Frame>
 
-            <!-- Descrizione dell'azione -->
-            <StackLayout Grid.Row="2" 
+            <!-- Pulsante LOGOUT -->
+            <Frame Grid.Row="2" 
+                   Margin="0,8,0,16"
+                   Padding="0"
+                   HeightRequest="60"
+                   CornerRadius="10"
+                   BorderColor="Transparent"
+                   BackgroundColor="#FF9800">
+                <Button Text="LOGOUT" 
+                        TextColor="White"
+                        FontSize="18"
+                        FontAttributes="Bold"
+                        BackgroundColor="Transparent"
+                        Clicked="OnLogoutClicked" />
+            </Frame>
+
+            <!-- Descrizione delle azioni -->
+            <StackLayout Grid.Row="3" 
                          Margin="0,24,0,0">
                 <Frame Style="{StaticResource CardStyle}"
                        Padding="16"
                        Margin="0,8">
                     <StackLayout>
-                        <Label Text="Importante" 
+                        <Label Text="Comandi Disponibili" 
                                FontAttributes="Bold"
                                TextColor="{StaticResource TextColorLight}"
                                Margin="0,0,0,8" />
 
-                        <Label Text="Premendo START Ultima Online Macro riprenderà l'esecuzione. Premendo STOP Ultima Online Macro verrà fermato. Queste azioni hanno effetto immediato sull'applicativo."
-                               TextColor="{StaticResource TextColorLight}" />
+                        <Label Text="• START: Riprende l'esecuzione di Ultima Online Macro"
+                               TextColor="{StaticResource TextColorLight}"
+                               Margin="0,0,0,4" />
+
+                        <Label Text="• STOP: Ferma l'esecuzione di Ultima Online Macro"
+                               TextColor="{StaticResource TextColorLight}"
+                               Margin="0,0,0,4" />
+
+                        <Label Text="• LOGOUT: Chiude TM Client e disconnette l'applicativo"
+                               TextColor="{StaticResource TextColorLight}"
+                               Margin="0,0,0,8" />
+
+                        <Label Text="Tutte le azioni hanno effetto immediato sull'applicativo desktop."
+                               TextColor="{StaticResource TextColorGray}"
+                               FontSize="12"
+                                />
                     </StackLayout>
                 </Frame>
             </StackLayout>

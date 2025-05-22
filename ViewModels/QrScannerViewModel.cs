@@ -1,5 +1,4 @@
-﻿// ViewModels/QrScannerViewModel.cs
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using UOMacroMobile.Services.Interfaces;
 using ZXing;
@@ -15,49 +14,116 @@ namespace UOMacroMobile.ViewModels
         private string _statusMessage;
 
         [ObservableProperty]
-        private bool _isScanning = true;
+        private bool _isScanning = false; // Inizia come false
 
         [ObservableProperty]
         private bool _cameraDenied;
-        private IMqqtService _mqttService;
-        private readonly IDialogService dialogService;
 
-        public QrScannerViewModel(IMqqtService mqqtService, IDialogService dialogService)
+        [ObservableProperty]
+        private bool _permissionsChecked = false;
+
+        private IMqqtService _mqttService;
+
+        public QrScannerViewModel(IMqqtService mqqtService)
         {
             _mqttService = mqqtService;
-            this.dialogService = dialogService;
-            StatusMessage = "Posiziona il QR Code nel riquadro";
-            IsBusy = false;
+            StatusMessage = "Verifica permessi fotocamera...";
+            IsBusy = true;
             CameraDenied = false;
-
-            // Verifica i permessi della fotocamera
-            MainThread.BeginInvokeOnMainThread(async () => await RequestCameraPermission());
         }
 
-        private async Task RequestCameraPermission()
+        // Metodo pubblico per inizializzare i permessi quando la pagina è completamente caricata
+        public async Task InitializeAsync()
         {
-            try
+            await RequestCameraPermissionWithRetry();
+        }
+
+        private async Task RequestCameraPermissionWithRetry(int maxRetries = 3)
+        {
+            for (int attempt = 1; attempt <= maxRetries; attempt++)
             {
-                var status = await Permissions.CheckStatusAsync<Permissions.Camera>();
-                if (status != PermissionStatus.Granted)
+                try
                 {
-                    status = await Permissions.RequestAsync<Permissions.Camera>();
-                    if (status != PermissionStatus.Granted)
+                    StatusMessage = $"Controllo permessi fotocamera (tentativo {attempt}/{maxRetries})...";
+
+                    var status = await Permissions.CheckStatusAsync<Permissions.Camera>();
+
+                    if (status == PermissionStatus.Granted)
                     {
-                        StatusMessage = "È necessario abilitare i permessi della fotocamera";
-                        CameraDenied = true;
-                        IsScanning = false;
+                        await EnableScanner();
+                        return;
+                    }
+
+                    if (status == PermissionStatus.Unknown || status == PermissionStatus.Denied)
+                    {
+                        StatusMessage = "Richiesta permesso fotocamera...";
+                        status = await Permissions.RequestAsync<Permissions.Camera>();
+
+                        if (status == PermissionStatus.Granted)
+                        {
+                            await EnableScanner();
+                            return;
+                        }
+                    }
+
+                    // Se il permesso è stato negato definitivamente
+                    if (status == PermissionStatus.Disabled || status == PermissionStatus.Restricted)
+                    {
+                        ShowPermissionDeniedState();
+                        return;
+                    }
+
+                    // Aspetta un po' prima del prossimo tentativo
+                    if (attempt < maxRetries)
+                    {
+                        StatusMessage = $"Tentativo fallito, riprovo tra 2 secondi...";
+                        await Task.Delay(2000);
                     }
                 }
-                else
+                catch (Exception ex)
                 {
-                    CameraDenied = false;
+                    StatusMessage = $"Errore controllo permessi: {ex.Message}";
+                    if (attempt < maxRetries)
+                    {
+                        await Task.Delay(2000);
+                    }
                 }
             }
-            catch (Exception ex)
-            {
-                StatusMessage = $"Errore: {ex.Message}";
-            }
+
+            // Se arriviamo qui, tutti i tentativi sono falliti
+            ShowPermissionDeniedState();
+        }
+
+        private async Task EnableScanner()
+        {
+            StatusMessage = "Permessi concessi! Inizializzazione scanner...";
+            PermissionsChecked = true;
+            CameraDenied = false;
+
+            // Aspetta un momento per assicurarsi che tutto sia pronto
+            await Task.Delay(500);
+
+            IsScanning = true;
+            IsBusy = false;
+            StatusMessage = "Posiziona il QR Code nel riquadro";
+        }
+
+        private void ShowPermissionDeniedState()
+        {
+            StatusMessage = "Permessi fotocamera negati";
+            CameraDenied = true;
+            IsScanning = false;
+            IsBusy = false;
+            PermissionsChecked = true;
+        }
+
+        [RelayCommand]
+        public async Task RetryPermissions()
+        {
+            CameraDenied = false;
+            IsBusy = true;
+            PermissionsChecked = false;
+            await RequestCameraPermissionWithRetry();
         }
 
         [RelayCommand]
@@ -79,7 +145,6 @@ namespace UOMacroMobile.ViewModels
                 IsScanning = false;
                 StatusMessage = "Elaborazione in corso...";
 
-                // Usa MediaPicker per catturare una foto
                 var photo = await MediaPicker.CapturePhotoAsync(new MediaPickerOptions
                 {
                     Title = "Scansiona un QR code"
@@ -93,21 +158,16 @@ namespace UOMacroMobile.ViewModels
                     return;
                 }
 
-                // Leggi la foto
                 using var stream = await photo.OpenReadAsync();
                 using var memoryStream = new MemoryStream();
                 await stream.CopyToAsync(memoryStream);
                 var imageBytes = memoryStream.ToArray();
 
-                // Decodifica il QR code
                 var result = await DecodeQrCodeAsync(imageBytes);
 
                 if (!string.IsNullOrEmpty(result))
                 {
-                    // Invia il risultato
                     MessagingCenter.Send(Application.Current.MainPage, "QrCodeScanned", result);
-
-                    // Chiudi la pagina
                     await Application.Current.MainPage.Navigation.PopModalAsync();
                 }
                 else
@@ -131,11 +191,9 @@ namespace UOMacroMobile.ViewModels
             {
                 try
                 {
-                    // Crea una funzione che converte byte[] in LuminanceSource
                     Func<byte[], LuminanceSource> createLuminanceSource = (data) =>
-                        new RGBLuminanceSource(data, 0, 0); // Nota: dovresti specificare larghezza e altezza reali
+                        new RGBLuminanceSource(data, 0, 0);
 
-                    // Crea il lettore con la funzione di conversione
                     var reader = new BarcodeReader<byte[]>(createLuminanceSource)
                     {
                         AutoRotate = true,
@@ -146,7 +204,6 @@ namespace UOMacroMobile.ViewModels
                         }
                     };
 
-                    // Decodifica l'immagine
                     var result = reader.Decode(imageBytes);
                     return result?.Text;
                 }
@@ -161,19 +218,20 @@ namespace UOMacroMobile.ViewModels
             });
         }
 
-        public async void ProcessQrResult(string result)
+        public void ProcessQrResult(string result)
         {
             if (string.IsNullOrEmpty(result))
                 return;
-            _mqttService.CurrentDeviceId = result;
+
             IsScanning = false;
             IsBusy = true;
             StatusMessage = "QR Code rilevato!";
-            // Invia il risultato e chiudi la pagina
+
             MainThread.BeginInvokeOnMainThread(async () =>
             {
                 try
                 {
+                    _mqttService.CurrentDeviceId = result;
                     if (!_mqttService.IsConnected)
                         await _mqttService.ConnectAsync(true);
                     else

@@ -10,7 +10,7 @@ namespace UOMacroMobile.ViewModels
         private readonly IMqqtService _mqqtService;
         private string _statusText;
 
-        public bool IsConnected { get; set; } = true;
+        public bool IsConnected => _mqqtService.IsConnected;
 
         public string StatusText
         {
@@ -41,35 +41,95 @@ namespace UOMacroMobile.ViewModels
         {
             if (IsConnected)
             {
-                StatusText = "L'applicativo è in esecuzione";
+                StatusText = "Connesso - L'applicativo è in esecuzione";
             }
             else
             {
-                StatusText = "L'applicativo è fermo";
+                StatusText = "Non connesso - L'applicativo è fermo";
             }
 
             OnPropertyChanged(nameof(IsConnected));
         }
 
-        public async Task Stop()
-        {
-            if (!_mqqtService.IsConnected)
-                await _mqqtService.ConnectAsync();
-
-            await _mqqtService.PublishNotificationAsync("STOP", "L'applicativo è stato fermato da un dispositivo mobile", MqttNotificationModel.NotificationSeverity.Info);
-            IsConnected = false;
-            UpdateStatus();
-        }
-
         public async Task Start()
         {
-            if (!_mqqtService.IsConnected)
-                await _mqqtService.ConnectAsync();
+            try
+            {
+                if (!_mqqtService.IsConnected)
+                    await _mqqtService.ConnectAsync();
 
-            await _mqqtService.PublishNotificationAsync("START", "L'applicativo è stato avviato da un dispositivo mobile", MqttNotificationModel.NotificationSeverity.Info);
-            IsConnected = true;
+                // Invia il comando START
+                bool success = await _mqqtService.PublishNotificationAsync(
+                    "START",
+                    "L'applicativo è stato avviato da un dispositivo mobile",
+                    MqttNotificationModel.NotificationSeverity.Info);
 
-            UpdateStatus();
+                if (!success)
+                {
+                    throw new Exception("Impossibile inviare il comando START. Verifica la connessione.");
+                }
+
+                UpdateStatus();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore Start: {ex.Message}");
+                throw; // Rilancia l'eccezione per gestirla nell'UI
+            }
+        }
+
+        public async Task Stop()
+        {
+            try
+            {
+                if (!_mqqtService.IsConnected)
+                    await _mqqtService.ConnectAsync();
+
+                // Invia il comando STOP
+                bool success = await _mqqtService.PublishNotificationAsync(
+                    "STOP",
+                    "L'applicativo è stato fermato da un dispositivo mobile",
+                    MqttNotificationModel.NotificationSeverity.Info);
+
+                if (!success)
+                {
+                    throw new Exception("Impossibile inviare il comando STOP. Verifica la connessione.");
+                }
+
+                UpdateStatus();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore Stop: {ex.Message}");
+                throw; // Rilancia l'eccezione per gestirla nell'UI
+            }
+        }
+
+        public async Task Logout()
+        {
+            try
+            {
+                if (!_mqqtService.IsConnected)
+                    await _mqqtService.ConnectAsync();
+
+                // Invia il comando LOGOUT
+                bool success = await _mqqtService.PublishNotificationAsync(
+                    "LOGOUT",
+                    "TM Client è stato chiuso",
+                    MqttNotificationModel.NotificationSeverity.Info);
+
+                if (!success)
+                {
+                    throw new Exception("Impossibile inviare il comando LOGOUT. Verifica la connessione.");
+                }
+
+                UpdateStatus();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore Logout: {ex.Message}");
+                throw; // Rilancia l'eccezione per gestirla nell'UI
+            }
         }
 
         #region INotifyPropertyChanged

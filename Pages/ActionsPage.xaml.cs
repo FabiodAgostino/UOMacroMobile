@@ -1,35 +1,47 @@
-using UOMacroMobile.ViewModels;
 using UOMacroMobile.Services.Interfaces;
+using UOMacroMobile.ViewModels;
 
 namespace UOMacroMobile.Pages
 {
     public partial class ActionsPage : ContentPage
     {
-        private readonly ActionsViewModel _viewModel;
+        private ActionsViewModel _viewModel;
 
-        public ActionsPage(ActionsViewModel viewModel)
+        public ActionsPage()
         {
             InitializeComponent();
-            _viewModel = viewModel;
+
+            // Ottieni il servizio MQTT e crea il ViewModel
+            var mqttService = IPlatformApplication.Current.Services.GetService<IMqqtService>();
+            _viewModel = new ActionsViewModel(mqttService);
             BindingContext = _viewModel;
         }
+
         private async void OnStartClicked(object sender, EventArgs e)
         {
             try
             {
-                SetButtonsEnabled(false);
+                // Disabilita il pulsante durante l'operazione
+                if (sender is Button button)
+                {
+                    button.IsEnabled = false;
+                    button.Text = "Avvio...";
+                }
 
-                bool confirm = await DisplayAlert("Conferma", "Sei sicuro di voler avviare l'applicativo?", "Sì", "No");
-                if(confirm)
-                    await _viewModel.Start();
+                await _viewModel.Start();
             }
             catch (Exception ex)
             {
+                await DisplayAlert("Errore", $"Errore durante l'avvio: {ex.Message}", "OK");
             }
             finally
             {
-                // Riabilitiamo i pulsanti
-                SetButtonsEnabled(true);
+                // Riabilita il pulsante
+                if (sender is Button button)
+                {
+                    button.IsEnabled = true;
+                    button.Text = "START";
+                }
             }
         }
 
@@ -37,29 +49,69 @@ namespace UOMacroMobile.Pages
         {
             try
             {
-                SetButtonsEnabled(false);
+                // Disabilita il pulsante durante l'operazione
+                if (sender is Button button)
+                {
+                    button.IsEnabled = false;
+                    button.Text = "Arresto...";
+                }
 
-                bool confirm = await DisplayAlert("Conferma", "Sei sicuro di voler fermare l'applicativo?", "Sì", "No");
-                if (confirm)
-                    await _viewModel.Stop();
+                await _viewModel.Stop();
             }
             catch (Exception ex)
             {
-                await DisplayAlert("Errore", $"Si è verificato un errore durante l'arresto: {ex.Message}", "OK");
+                await DisplayAlert("Errore", $"Errore durante l'arresto: {ex.Message}", "OK");
             }
             finally
             {
-                SetButtonsEnabled(true);
+                // Riabilita il pulsante
+                if (sender is Button button)
+                {
+                    button.IsEnabled = true;
+                    button.Text = "STOP";
+                }
             }
         }
 
-        private void SetButtonsEnabled(bool enabled)
+        private async void OnLogoutClicked(object sender, EventArgs e)
         {
-            var startButton = this.FindByName<Button>("StartButton");
-            var stopButton = this.FindByName<Button>("StopButton");
+            try
+            {
+                // Mostra una conferma prima di procedere
+                bool confirm = await DisplayAlert(
+                    "Conferma Logout",
+                    "Sei sicuro di voler chiudere TM Client? Questa azione fermerà completamente l'applicativo.",
+                    "Sì, Logout",
+                    "Annulla");
 
-            if (startButton != null) startButton.IsEnabled = enabled;
-            if (stopButton != null) stopButton.IsEnabled = enabled;
+                if (!confirm)
+                    return;
+
+                // Disabilita il pulsante durante l'operazione
+                if (sender is Button button)
+                {
+                    button.IsEnabled = false;
+                    button.Text = "Logout...";
+                }
+
+                await _viewModel.Logout();
+
+                // Mostra messaggio di conferma
+                await DisplayAlert("Logout Completato", "TM Client è stato chiuso con successo.", "OK");
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Errore", $"Errore durante il logout: {ex.Message}", "OK");
+            }
+            finally
+            {
+                // Riabilita il pulsante
+                if (sender is Button button)
+                {
+                    button.IsEnabled = true;
+                    button.Text = "LOGOUT";
+                }
+            }
         }
     }
 }

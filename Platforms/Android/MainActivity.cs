@@ -1,10 +1,9 @@
 ﻿using Android.App;
-using Android.Content;
 using Android.Content.PM;
 using Android.OS;
 using AndroidX.Core.App;
 using AndroidX.Core.Content;
-using AndroidX.Startup;
+using Android.Content;
 using UOMacroMobile.Platforms.Android;
 
 namespace UOMacroMobile
@@ -12,62 +11,67 @@ namespace UOMacroMobile
     [Activity(Theme = "@style/Maui.SplashTheme", MainLauncher = true, LaunchMode = LaunchMode.SingleTop, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation | ConfigChanges.UiMode | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize | ConfigChanges.Density)]
     public class MainActivity : MauiAppCompatActivity
     {
-        private bool _initialized = false;  
+        private const int CAMERA_PERMISSION_REQUEST_CODE = 100;
+        private const int NOTIFICATION_PERMISSION_REQUEST_CODE = 101;
+
         protected override void OnCreate(Bundle savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
-            if (!_initialized)
-            {
-                _initialized = true;
 
-                // Richiedi i permessi di notifica per Android 13+ (API 33+)
-                if (Build.VERSION.SdkInt >= BuildVersionCodes.Tiramisu)
-                {
-                    // Verifica se abbiamo già il permesso
-                    if (ContextCompat.CheckSelfPermission(this, Android.Manifest.Permission.PostNotifications)
-                        != Permission.Granted)
-                    {
-                        // Richiedi il permesso
-                        ActivityCompat.RequestPermissions(this,
-                            new string[] { Android.Manifest.Permission.PostNotifications },
-                            100); // ID richiesta arbitrario
-                    }
-                }
+            // Richiedi i permessi in modo asincrono per non bloccare l'avvio
+            RequestPermissionsAsync();
 
-                // Inizializza il canale di notifica
-                CreateNotificationChannel();
+            // Inizializza il canale di notifica
+            CreateNotificationChannel();
 
-                // Avvia il servizio MQTT in background (prima volta)
-                StartMqttBackgroundService(true);
-            }
-           
+            // Avvia il servizio MQTT in background
+            StartMqttBackgroundService(true);
         }
 
-        // NUOVO: Gestione dello stato quando l'app va in foreground
+        private async void RequestPermissionsAsync()
+        {
+            // Lista dei permessi da richiedere
+            var permissionsToRequest = new List<string>();
+
+            // Controlla permesso fotocamera
+            if (ContextCompat.CheckSelfPermission(this, Android.Manifest.Permission.Camera) != Permission.Granted)
+            {
+                permissionsToRequest.Add(Android.Manifest.Permission.Camera);
+            }
+
+            // Controlla permesso notifiche per Android 13+
+            if (Build.VERSION.SdkInt >= BuildVersionCodes.Tiramisu)
+            {
+                if (ContextCompat.CheckSelfPermission(this, Android.Manifest.Permission.PostNotifications) != Permission.Granted)
+                {
+                    permissionsToRequest.Add(Android.Manifest.Permission.PostNotifications);
+                }
+            }
+
+            // Richiedi i permessi se necessario
+            if (permissionsToRequest.Count > 0)
+            {
+                // Aspetta un momento per permettere all'app di inizializzarsi completamente
+                await Task.Delay(1000);
+
+                ActivityCompat.RequestPermissions(this, permissionsToRequest.ToArray(), CAMERA_PERMISSION_REQUEST_CODE);
+            }
+        }
+
         protected override void OnResume()
         {
             base.OnResume();
-
-            // Imposta lo stato dell'app come in foreground
             AppStateManager.IsAppInForeground = true;
-
-            // Informa il servizio dello stato aggiornato
             UpdateMqttServiceStatus(true);
         }
 
-        // NUOVO: Gestione dello stato quando l'app va in background
         protected override void OnPause()
         {
             base.OnPause();
-
-            // Imposta lo stato dell'app come in background
             AppStateManager.IsAppInForeground = false;
-
-            // Informa il servizio dello stato aggiornato
             UpdateMqttServiceStatus(false);
         }
 
-        // NUOVO: Metodo per avviare il servizio MQTT in background
         private void StartMqttBackgroundService(bool isAppInForeground)
         {
             var intent = new Intent(this, typeof(Platforms.Android.MqttBackgroundService));
@@ -83,7 +87,6 @@ namespace UOMacroMobile
             }
         }
 
-        // NUOVO: Metodo per aggiornare lo stato nel servizio MQTT
         private void UpdateMqttServiceStatus(bool isAppInForeground)
         {
             var intent = new Intent(this, typeof(Platforms.Android.MqttBackgroundService));
@@ -91,12 +94,11 @@ namespace UOMacroMobile
             StartService(intent);
         }
 
-        // Metodo per creare il canale di notifica all'avvio dell'app
         private void CreateNotificationChannel()
         {
             if (Build.VERSION.SdkInt >= BuildVersionCodes.O)
             {
-                // Crea il canale per notifiche standard
+                // Canale per notifiche standard
                 var channelId = "mqtt_notifications";
                 var channelName = "Notifiche MQTT";
                 var channel = new NotificationChannel(
@@ -106,11 +108,10 @@ namespace UOMacroMobile
                 channel.EnableLights(true);
                 channel.EnableVibration(true);
 
-                // Registra il canale nel sistema
                 var notificationManager = (NotificationManager)GetSystemService(Context.NotificationService);
                 notificationManager?.CreateNotificationChannel(channel);
 
-                // Crea anche un canale ad alta priorità per warning ed errori
+                // Canale ad alta priorità per warning ed errori
                 var highPriorityChannelId = "mqtt_high_priority";
                 var highPriorityChannelName = "Notifiche MQTT Importanti";
                 var highPriorityChannel = new NotificationChannel(
@@ -123,23 +124,83 @@ namespace UOMacroMobile
             }
         }
 
-        // Gestione della risposta alla richiesta dei permessi
         public override void OnRequestPermissionsResult(int requestCode, string[] permissions, Permission[] grantResults)
         {
             base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
-            if (requestCode == 100)
+
+            if (requestCode == CAMERA_PERMISSION_REQUEST_CODE)
             {
-                // Verifica se il permesso è stato concesso
-                if (grantResults.Length > 0 && grantResults[0] == Permission.Granted)
+                var cameraPermissionGranted = false;
+                var notificationPermissionGranted = false;
+
+                for (int i = 0; i < permissions.Length; i++)
                 {
-                    System.Console.WriteLine("Permesso notifiche concesso");
+                    if (permissions[i] == Android.Manifest.Permission.Camera)
+                    {
+                        cameraPermissionGranted = grantResults[i] == Permission.Granted;
+                        if (cameraPermissionGranted)
+                        {
+                            System.Console.WriteLine("✅ Permesso fotocamera concesso");
+                        }
+                        else
+                        {
+                            System.Console.WriteLine("❌ Permesso fotocamera negato");
+
+                            // Controlla se l'utente ha selezionato "Non chiedere più"
+                            bool shouldShowRationale = ActivityCompat.ShouldShowRequestPermissionRationale(this, Android.Manifest.Permission.Camera);
+                            if (!shouldShowRationale)
+                            {
+                                System.Console.WriteLine("⚠️ L'utente ha negato definitivamente il permesso fotocamera");
+                                ShowPermissionDeniedMessage();
+                            }
+                        }
+                    }
+                    else if (permissions[i] == Android.Manifest.Permission.PostNotifications)
+                    {
+                        notificationPermissionGranted = grantResults[i] == Permission.Granted;
+                        if (notificationPermissionGranted)
+                        {
+                            System.Console.WriteLine("✅ Permesso notifiche concesso");
+                        }
+                        else
+                        {
+                            System.Console.WriteLine("❌ Permesso notifiche negato");
+                        }
+                    }
                 }
-                else
-                {
-                    System.Console.WriteLine("Permesso notifiche negato");
-                    // Qui potresti mostrare un messaggio all'utente spiegando 
-                    // che le notifiche sono importanti per l'app
-                }
+            }
+        }
+
+        private void ShowPermissionDeniedMessage()
+        {
+            // Mostra un messaggio all'utente spiegando come abilitare manualmente i permessi
+            var builder = new AndroidX.AppCompat.App.AlertDialog.Builder(this);
+            builder.SetTitle("Permesso Fotocamera Richiesto");
+            builder.SetMessage("Per utilizzare lo scanner QR è necessario abilitare il permesso fotocamera dalle impostazioni dell'app.\n\nVuoi aprire le impostazioni ora?");
+            builder.SetPositiveButton("Apri Impostazioni", (sender, e) =>
+            {
+                // Apri le impostazioni dell'app
+                var intent = new Intent(Android.Provider.Settings.ActionApplicationDetailsSettings);
+                var uri = Android.Net.Uri.FromParts("package", PackageName, null);
+                intent.SetData(uri);
+                StartActivity(intent);
+            });
+            builder.SetNegativeButton("Annulla", (sender, e) => { });
+            builder.Show();
+        }
+
+        // Metodo pubblico per verificare se i permessi della fotocamera sono concessi
+        public bool IsCameraPermissionGranted()
+        {
+            return ContextCompat.CheckSelfPermission(this, Android.Manifest.Permission.Camera) == Permission.Granted;
+        }
+
+        // Metodo per richiedere nuovamente i permessi se necessario
+        public void RequestCameraPermissionAgain()
+        {
+            if (ContextCompat.CheckSelfPermission(this, Android.Manifest.Permission.Camera) != Permission.Granted)
+            {
+                ActivityCompat.RequestPermissions(this, new string[] { Android.Manifest.Permission.Camera }, CAMERA_PERMISSION_REQUEST_CODE);
             }
         }
     }

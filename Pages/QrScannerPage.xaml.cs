@@ -1,6 +1,7 @@
 ﻿// Pages/QrScannerPage.xaml.cs
 using Microsoft.Maui.Controls;
 using System;
+using System.ComponentModel;
 using UOMacroMobile.Services.Interfaces;
 using UOMacroMobile.ViewModels;
 
@@ -14,21 +15,52 @@ namespace UOMacroMobile.Pages
         public QrScannerPage()
         {
             InitializeComponent();
-            _viewModel = new QrScannerViewModel(IPlatformApplication.Current.Services.GetService<IMqqtService>(), IPlatformApplication.Current.Services.GetService<IDialogService>());
+            _viewModel = new QrScannerViewModel(IPlatformApplication.Current.Services.GetService<IMqqtService>());
             BindingContext = _viewModel;
-
-            // Inizializza il WebView per la scansione QR
-            InitializeScanner();
         }
 
-        protected override void OnAppearing()
+        protected override async void OnAppearing()
         {
             base.OnAppearing();
+
+            // CORREZIONE: Chiama l'inizializzazione asincrona
+            await _viewModel.InitializeAsync();
+
+            // Inizializza il WebView SOLO dopo che i permessi sono stati verificati
+            if (_viewModel.IsScanning && !_viewModel.CameraDenied)
+            {
+                InitializeScanner();
+            }
+        }
+
+        // Sposta la sottoscrizione agli eventi del ViewModel
+        protected override void OnBindingContextChanged()
+        {
+            base.OnBindingContextChanged();
+
+            if (_viewModel != null)
+            {
+                // Sottoscrivi ai cambiamenti di IsScanning
+                _viewModel.PropertyChanged += OnViewModelPropertyChanged;
+            }
+        }
+
+        private void OnViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(_viewModel.IsScanning))
+            {
+                if (_viewModel.IsScanning && _webView == null)
+                {
+                    InitializeScanner();
+                }
+            }
         }
 
         private void InitializeScanner()
         {
-            // Crea un WebView per la scansione QR
+            if (_webView != null)
+                return;
+
             _webView = new WebView
             {
                 VerticalOptions = LayoutOptions.Fill,
@@ -36,148 +68,48 @@ namespace UOMacroMobile.Pages
                 BackgroundColor = Colors.Black
             };
 
-            // HTML per la scansione QR code - versione corretta senza zoom eccessivo
-            string html = @"
-<!DOCTYPE html>
-<html>
-<head>
-    <meta name='viewport' content='width=device-width, initial-scale=1, maximum-scale=1'>
-    <title>QR Scanner</title>
-    <script src='https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js'></script>
-    <style>
-        body, html { 
-            margin: 0; 
-            padding: 0; 
-            height: 100vh; 
-            width: 100vw; 
-            overflow: hidden; 
-            background-color: #000; 
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        #reader { 
-            width: 100vw; 
-            height: 100vh;
-            max-width: 100%;
-            max-height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        /* Stili per nascondere elementi non necessari */
-        #reader__dashboard_section {
-            display: none !important;
-        }
-        
-        #reader__scan_region {
-            width: 100% !important;
-            height: 100% !important;
-            min-height: 100vh !important;
-        }
-        
-        video {
-            width: 100% !important;
-            height: 100vh !important;
-            object-fit: contain !important; /* Cambiato da 'cover' a 'contain' */
-            background: black;
-        }
-    </style>
-</head>
-<body>
-    <div id='reader'></div>
-    
-    <script>
-        // Configurazione migliorata
-        const html5QrCode = new Html5Qrcode('reader');
-        const config = { 
-            fps: 15,                 // Ridotto per migliori prestazioni
-            qrbox: { width: 250, height: 250 },
-            disableFlip: false,
-            formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ]
-        };
-        
-        // Rimuove elementi UI indesiderati e sistema il video
-        function adjustVideoSettings() {
-            const elements = document.querySelectorAll('#reader__dashboard_section, #reader__header_message');
-            elements.forEach(el => {
-                if (el) el.style.display = 'none';
-            });
-            
-            // Migliora la regione di scansione
-            const scanRegion = document.querySelector('#reader__scan_region');
-            if (scanRegion) {
-                scanRegion.style.width = '100%';
-                scanRegion.style.height = '100vh';
-            }
-            
-            // Regola il video senza zoom
-            const video = document.querySelector('video');
-            if (video) {
-                video.style.width = '100%';
-                video.style.height = '100vh';
-                video.style.objectFit = 'contain'; // Fondamentale: usa 'contain' invece di 'cover'
-                video.style.background = 'black';
-            }
-        }
-        
-        // Avvia la scansione
-        html5QrCode.start(
-            { facingMode: 'environment' }, 
-            config, 
-            (decodedText) => {
-                // Invia il risultato all'app
-                window.location.href = 'qrcode://' + encodeURIComponent(decodedText);
-            },
-            (errorMessage) => {
-                // Ignora gli errori di scansione (è normale)
-            }
-        ).then(() => {
-            console.log('Scanner started successfully');
-            // Applica le impostazioni del video
-            setTimeout(adjustVideoSettings, 500);
-            setInterval(adjustVideoSettings, 2000); // Mantieni le impostazioni
-        }).catch(err => {
-            console.error('Error starting scanner:', err);
-        });
-        
-        // Funzione per fermare lo scanner
-        window.stopScanning = () => {
-            if (html5QrCode.isScanning) {
-                html5QrCode.stop();
-            }
-        };
-    </script>
-</body>
-</html>";
-
-            // Configura il WebView 
 #if ANDROID
-            Microsoft.Maui.Handlers.WebViewHandler.Mapper.AppendToMapping("EnableCamera", (handler, view) =>
+            // Configurazione avanzata per Android
+            Microsoft.Maui.Handlers.WebViewHandler.Mapper.AppendToMapping("ConfigureWebView", (handler, view) =>
             {
-                if (handler.PlatformView is Android.Webkit.WebView webView)
+                if (handler.PlatformView is Android.Webkit.WebView androidWebView)
                 {
-                    webView.Settings.JavaScriptEnabled = true;
-                    webView.Settings.MediaPlaybackRequiresUserGesture = false;
-                    webView.Settings.SetGeolocationEnabled(true);
-                    webView.Settings.AllowContentAccess = true;
-                    webView.Settings.AllowFileAccess = true;
-                    webView.Settings.DatabaseEnabled = true;
-                    webView.Settings.DomStorageEnabled = true;
-                    webView.Settings.SetPluginState(Android.Webkit.WebSettings.PluginState.On);
+                    var settings = androidWebView.Settings;
 
-                    // Imposta un client personalizzato per gestire le richieste di permesso
-                    webView.SetWebChromeClient(new MyChromeClient());
+                    // Abilita JavaScript
+                    settings.JavaScriptEnabled = true;
+
+                    // Permessi per media e geolocalizzazione
+                    settings.MediaPlaybackRequiresUserGesture = false;
+                    settings.SetGeolocationEnabled(true);
+
+                    // Accesso ai file e contenuti
+                    settings.AllowContentAccess = true;
+                    settings.AllowFileAccess = true;
+                    settings.AllowFileAccessFromFileURLs = true;
+                    settings.AllowUniversalAccessFromFileURLs = true;
+
+                    // Database e storage
+                    settings.DatabaseEnabled = true;
+                    settings.DomStorageEnabled = true;
+
+                    // Supporto per media moderni
+                    settings.SetPluginState(Android.Webkit.WebSettings.PluginState.On);
+
+                    // CRITICO: Imposta il WebChromeClient personalizzato
+                    androidWebView.SetWebChromeClient(new MyChromeClient());
+
+                    Console.WriteLine("WebView Android configurato per fotocamera");
                 }
             });
 #endif
 
+            // HTML migliorato con gestione errori dettagliata
+            string html = GetScannerHtml();
+
             _webView.Source = new HtmlWebViewSource { Html = html };
             _webView.Navigating += ScannerWebView_Navigating;
 
-            // Aggiungi il WebView al container
             webViewContainer.Content = _webView;
         }
 
@@ -185,17 +117,23 @@ namespace UOMacroMobile.Pages
         {
             if (e.Url.StartsWith("qrcode://"))
             {
-                if (sender is WebView scannerWebView)
-                    scannerWebView.IsVisible = false;
-
                 e.Cancel = true;
                 string result = Uri.UnescapeDataString(e.Url.Substring(9));
 
-                await _webView.EvaluateJavaScriptAsync("stopScanning()");
+                // Ferma lo scanner
+                if (_webView != null)
+                {
+                    try
+                    {
+                        await _webView.EvaluateJavaScriptAsync("stopScanning()");
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Errore nel fermare lo scanner: {ex.Message}");
+                    }
+                }
 
-                webViewContainer.IsVisible = false;
-
-                // Processa il risultato del QR code
+                // Processa il risultato
                 _viewModel.ProcessQrResult(result);
 
                 await Navigation.PopModalAsync();
@@ -206,24 +144,201 @@ namespace UOMacroMobile.Pages
         {
             base.OnDisappearing();
 
-            // Pulisci gli eventi
+            // Cleanup
+            if (_viewModel != null)
+            {
+                _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
+            }
+
             if (_webView != null)
             {
-                _webView.Navigating -= ScannerWebView_Navigating;
-
-                // Ferma lo scanner
-                _webView.EvaluateJavaScriptAsync("stopScanning()");
+                try
+                {
+                    _webView.Navigating -= ScannerWebView_Navigating;
+                    _webView.EvaluateJavaScriptAsync("stopScanning()");
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Errore nel cleanup: {ex.Message}");
+                }
             }
         }
+
+        private string GetScannerHtml()
+        {
+            return @"
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <title>QR Scanner</title>
+    <script src='https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js'></script>
+    <style>
+        body, html { 
+            margin: 0; 
+            padding: 0; 
+            height: 100%; 
+            width: 100%; 
+            background-color: #000; 
+            overflow: hidden;
+        }
+        
+        #reader { 
+            width: 100vw; 
+            height: 100vh; 
+            position: relative;
+        }
+        
+        #reader video {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: contain !important;
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            transform: none !important;
+        }
+        
+        /* Nascondi TUTTI gli angoli quadrati */
+        #reader canvas,
+        #reader div[style*='position: absolute'][style*='border'],
+        #reader div[style*='border'][style*='absolute'],
+        .qr-code-region-highlight-svg,
+        .qr-code-region-highlight {
+            display: none !important;
+        }
+        
+        /* Nascondi testi inutili */
+        #reader > div > div:last-child {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div id='reader'></div>
+    
+    <script>
+        async function initScanner() {
+            try {
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    return;
+                }
+                
+                const testStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        facingMode: 'environment'
+                    } 
+                });
+                testStream.getTracks().forEach(track => track.stop());
+                
+                const html5QrCode = new Html5Qrcode('reader');
+                
+                const config = { 
+                    fps: 10,
+                    qrbox: { width: 250, height: 250 },
+                    aspectRatio: 1.0,
+                    disableFlip: false,
+                    showTorchButtonIfSupported: false,
+                    showZoomSliderIfSupported: false,
+                    defaultZoomValueIfSupported: 1
+                };
+                
+                await html5QrCode.start(
+                    { facingMode: 'environment' },
+                    config,
+                    (decodedText, decodedResult) => {
+                        html5QrCode.stop().then(() => {
+                            window.location.href = 'qrcode://' + encodeURIComponent(decodedText);
+                        });
+                    },
+                    (errorMessage) => {
+                        // Errori ignorati
+                    }
+                );
+                
+                setTimeout(() => {
+                    removeUnwantedElements();
+                }, 1500);
+                
+                window.stopScanning = () => {
+                    if (html5QrCode.isScanning) {
+                        html5QrCode.stop();
+                    }
+                };
+                
+            } catch (error) {
+                console.error('Scanner error:', error.message);
+            }
+        }
+        
+        function removeUnwantedElements() {
+            const reader = document.getElementById('reader');
+            const video = reader.querySelector('video');
+            
+            if (video) {
+                // IMPORTANTE: object-fit contain per evitare zoom
+                video.style.width = '100%';
+                video.style.height = '100%';
+                video.style.objectFit = 'contain';
+                video.style.position = 'absolute';
+                video.style.top = '0';
+                video.style.left = '0';
+                video.style.transform = 'none';
+                video.style.zoom = '1';
+            }
+            
+            // Rimuovi TUTTI gli elementi che potrebbero essere angoli
+            const elementsToRemove = reader.querySelectorAll('canvas, svg, div[style*=border]');
+            elementsToRemove.forEach(element => {
+                const style = element.getAttribute('style') || '';
+                if (style.includes('position: absolute') || 
+                    style.includes('border') || 
+                    element.tagName === 'CANVAS' ||
+                    element.tagName === 'SVG') {
+                    element.style.display = 'none';
+                }
+            });
+            
+            // Nascondi testi
+            const textElements = reader.querySelectorAll('div');
+            textElements.forEach(element => {
+                if (element.textContent && (
+                    element.textContent.includes('Unable') || 
+                    element.textContent.includes('Scanning') ||
+                    element.textContent.includes('Code'))) {
+                    element.style.display = 'none';
+                }
+            });
+        }
+        
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initScanner);
+        } else {
+            initScanner();
+        }
+    </script>
+</body>
+</html>";
+        }
+
     }
 
 #if ANDROID
-    // Aggiungi questa classe nella stessa pagina o in un file separato
     public class MyChromeClient : Android.Webkit.WebChromeClient
     {
         public override void OnPermissionRequest(Android.Webkit.PermissionRequest request)
         {
-            request.Grant(request.GetResources());
+            // Concedi esplicitamente tutti i permessi richiesti
+            var resources = request.GetResources();
+            Console.WriteLine($"WebView richiede permessi: {string.Join(", ", resources)}");
+            request.Grant(resources);
+        }
+
+        // Gestione permessi per versioni precedenti di Android
+        public override void OnPermissionRequestCanceled(Android.Webkit.PermissionRequest request)
+        {
+            base.OnPermissionRequestCanceled(request);
+            Console.WriteLine("Permessi WebView cancellati");
         }
     }
 #endif

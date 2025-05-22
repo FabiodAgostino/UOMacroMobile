@@ -67,15 +67,8 @@ public partial class NotificationsPage : ContentPage
 
         if (_mqttService.SmartphoneConnected || (!_mqttService.SmartphoneConnected && _mqttService.IsConnected))
         {
-            bool disconnect = await DisplayAlert(
-                "Disconnessione",
-                $"Sei connesso a {_mqttService.CurrentDeviceId}. Vuoi disconnetterti?",
-                "Disconnetti", "Annulla");
-
-            if (disconnect)
-            {
                 await _mqttService.DisconnectAsync();
-            }
+                await _qrScannerService.ScanQrCodeAsync();
         }
         else
         {
